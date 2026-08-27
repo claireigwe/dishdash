@@ -1391,6 +1391,269 @@ img, svg {
 }
 
 /* ==========================================================================
+   Weekly Planner Page Styles (Phase 5)
+   ========================================================================== */
+
+.planner-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.planner-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.planner-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.planner-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.planner-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+/* Empty Planner Banner */
+.empty-planner-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.banner-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-text);
+}
+
+.banner-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+/* Planner Slots Grid */
+.planner-slots-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Day Slot Card */
+.day-slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--color-border);
+  transition: all var(--transition-fast);
+}
+
+.day-slot-card.slot-occupied {
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.day-slot-card.slot-empty {
+  border-style: dashed;
+  background-color: var(--color-surface);
+}
+
+.slot-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.slot-day-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slot-day-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.slot-date-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.slot-empty-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.empty-slot-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.btn-add-meal {
+  border: 1.5px dashed var(--color-border);
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.btn-add-meal:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.slot-occupied-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.occupied-meal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.occupied-meal-name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.occupied-badges {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.occupied-meal-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.slot-actions-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+}
+
+.btn-remove {
+  color: var(--color-danger);
+  border-color: var(--color-danger-bg);
+}
+
+.btn-remove:hover {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.slot-invalid-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.invalid-meal-banner {
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+}
+
+/* Meal Picker Modal Styles */
+.meal-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.meal-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.meal-picker-item:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.picker-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.picker-meal-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.picker-meal-badges {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.picker-item-action {
+  display: flex;
+  align-items: center;
+}
+
+.btn-select-text {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-primary-light);
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 
@@ -1416,10 +1679,23 @@ img, svg {
     border-radius: var(--radius-xl);
     max-height: 80vh;
   }
+
+  .empty-planner-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --max-content-width: 760px;
+    --max-content-width: 820px;
+  }
+
+  .planner-slots-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
   }
 }
+

@@ -94,6 +94,26 @@ export function useUserState() {
     [updateState]
   );
 
+  // Remove meal from a specific day slot in the 7-day weekly plan
+  const removeMealFromDay = useCallback(
+    (dayIndex: number) => {
+      updateState((prev) => {
+        const currentDays = prev.weeklyPlan?.days ? prev.weeklyPlan.days : [];
+        const updatedDays = currentDays.map((day) =>
+          day.dayIndex === dayIndex ? { ...day, mealId: null } : day
+        );
+        return {
+          ...prev,
+          weeklyPlan: {
+            ...prev.weeklyPlan,
+            days: updatedDays,
+          },
+        };
+      });
+    },
+    [updateState]
+  );
+
   return {
     state,
     isLoaded,
@@ -105,5 +125,6 @@ export function useUserState() {
     clearIngredients,
     setPreference,
     assignMealToDay,
+    removeMealFromDay,
   };
 }
