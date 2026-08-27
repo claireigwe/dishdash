@@ -1,207 +1,47 @@
-# DishDash — Development Journal
+# DishDash Development Journal
 
 ## Project Overview
 
-DishDash is a simple meal decision and weekly planning app designed for solo cooks who already have some ingredients at home but do not know what to cook.
+DishDash is a simple meal decision and planning app built around a straightforward problem: deciding what to cook can be difficult when you already have ingredients available but do not know what meal to make.
 
-The project was built as part of the Ship Log task. The goal was to take a basic product idea, turn it into a functional application, and document the development process, decisions, challenges, and solutions along the way.
-
----
-
-# Development Log
-
-## Entry 1 — Defining the Product
-
-### What I worked on
-
-I started by defining what DishDash should actually do and, more importantly, what it should **not** do.
-
-The initial product idea was intentionally simple: help a person decide what to cook based on ingredients they already have.
-
-Rather than turning it into a general recipe platform, I defined the core journey around:
-
-1. Selecting ingredients.
-2. Choosing a meal preference.
-3. Receiving meal recommendations.
-4. Viewing a meal.
-5. Adding meals to a weekly plan.
-6. Generating a grocery checklist from the plan.
-
-### Key decision
-
-I decided that DishDash should be a **meal decision tool**, not a full meal-management platform.
-
-This meant deliberately leaving out features such as:
-
-- Accounts and authentication
-- Backend APIs and databases
-- AI-generated recipes
-- Nutrition tracking
-- Calorie counting
-- Prices and budgeting
-- Pantry inventory
-- Expiration dates
-- Social features
-- Ratings and reviews
-- Grocery delivery
-- Calendar synchronization
-
-Keeping these out of scope helped me focus on making the core experience work well.
+The project was built as a Ship Log task. The goal was to take a basic product idea, turn it into a functional application, and document the development process, decisions, challenges, and solutions along the way.
 
 ---
 
-## Entry 2 — Choosing the Technical Direction
+## Phase 1: Project Setup and Data Foundation
 
-### What I worked on
+I started by setting up the DishDash project and establishing the foundation for the application.
 
-I established the technical structure for the application before building the main flows.
+The initial focus was on keeping the project simple and aligned with the assignment. I decided that the first version should not depend on a backend, authentication, AI, or a database. The application could provide the required experience using a curated static dataset and local browser storage.
 
-The application uses:
+### Decisions
 
-- Next.js
-- React
-- TypeScript
-- Vanilla CSS
-- Static TypeScript datasets
-- Browser `localStorage`
+- Use Next.js with TypeScript.
+- Use a static dataset for meals and ingredients.
+- Keep user state in localStorage.
+- Keep the recommendation logic deterministic.
+- Avoid unnecessary backend infrastructure for the first version.
+- Use vanilla CSS rather than introducing a utility CSS framework.
 
-### Key decision
+### Challenge
 
-I chose a client-side architecture for the V1 version.
+The main challenge was deciding how much functionality belonged in the first version. It would have been easy to keep adding features such as accounts, nutrition information, pricing, or AI recommendations.
 
-The meals and ingredients are stored locally as curated static datasets, while user-specific state is persisted in `localStorage`.
+### Solution
 
-This allowed the application to work without:
+I kept the scope focused on the core experience:
 
-- A backend
-- A database
-- Authentication
-- API requests
-
-It also made the application suitable for the offline-first direction I wanted to achieve later.
-
-### State model
-
-The main user state became:
-
-- `availableIngredientIds`
-- `selectedPreference`
-- `weeklyPlan`
-- `purchasedGroceryItemIds`
-
-I kept these values together rather than creating separate storage systems for different features.
+**Choose ingredients → Get meal recommendations → View a meal → Add it to a weekly plan → Generate a grocery checklist.**
 
 ---
 
-# Phase 1 — Project Foundation
+## Phase 2: Discovery Flow
 
-## Entry 3 — Establishing the Initial App Structure
+I worked on the main discovery experience where users select ingredients they already have.
 
-### What I worked on
+The interface was designed around ingredient search, category filtering, selected ingredient chips, and a preference selector.
 
-I created the initial application structure and established the routes that would eventually support the complete DishDash experience.
-
-The main routes were planned around:
-
-- `/` — Discovery
-- `/recommendations` — Meal recommendations
-- `/meals/[id]` — Meal details
-- `/planner` — Weekly planner
-- `/groceries` — Grocery checklist
-
-The early implementation included placeholders so that each major route existed before its full functionality was built.
-
-### Decision
-
-I decided to build the application in phases instead of attempting to implement everything at once.
-
-This made it easier to verify each major piece before moving to the next one.
-
----
-
-# Phase 2 — Data Foundation
-
-## Entry 4 — Creating the Meal and Ingredient Dataset
-
-### What I worked on
-
-I created a curated dataset containing Nigerian meals and their ingredients.
-
-The final data validation covered:
-
-- 41 ingredients
-- 20 meals
-
-The application uses IDs internally while resolving those IDs to human-readable names when displaying information to the user.
-
-### Key decision
-
-I wanted the dataset to remain predictable and deterministic.
-
-The application should never invent ingredients, meals, quantities, prices, or other information that does not exist in the curated dataset.
-
-### Validation
-
-A dedicated data validation script was created to verify the integrity of the dataset.
-
-This became an important check that could be run throughout development.
-
----
-
-# Phase 3 — Recommendation Engine & Discovery
-
-## Entry 5 — Building the Recommendation Engine
-
-### What I worked on
-
-I implemented the recommendation engine as a pure, deterministic client-side function.
-
-The recommendation system supports three preferences:
-
-- Quick & Easy
-- Something Different
-- No Preference
-
-### Recommendation rules
-
-For **Quick & Easy**, meals must have a cooking time of 30 minutes or less.
-
-For **Something Different**, meals already assigned to the weekly plan are excluded.
-
-For **No Preference**, all meals are eligible.
-
-For all three options, matching selected ingredients influence the ranking.
-
-The engine returns a maximum of three recommendations.
-
-### Important decision
-
-I chose deterministic ranking instead of random recommendations.
-
-If two meals have the same ingredient match count, the application preserves their original dataset order.
-
-This makes the experience predictable and also makes the recommendation engine easier to test.
-
----
-
-## Entry 6 — Designing the Discovery Experience
-
-### What I worked on
-
-I built the main discovery page where users select ingredients.
-
-The interface includes:
-
-- Ingredient search
-- Category filtering
-- Ingredient selection
-- Selected ingredient chips
-- Individual chip removal
-- Clear-all functionality
-- Preference selection
-- Dynamic Find Meals button
-
-The five ingredient categories are:
+The five ingredient categories were:
 
 - All
 - Staples & Grains
@@ -209,66 +49,75 @@ The five ingredient categories are:
 - Vegetables & Produce
 - Oils & Seasonings
 
+Users can search for ingredients, select multiple ingredients, remove individual selections, or clear all selections.
+
+### Decisions
+
+I wanted ingredient selection to represent the user's current search rather than becoming a permanent pantry inventory system.
+
+This distinction was important because DishDash is intended to help a user make a meal decision. It is not intended to track household inventory.
+
 ### Challenge
 
-I needed the ingredient selection to feel like a temporary search rather than a permanent pantry inventory.
+I needed to make the selection state useful across the recommendation and grocery flows without introducing unnecessary application state.
 
 ### Solution
 
-I treated `availableIngredientIds` as an **active search snapshot**.
-
-Selecting an ingredient does not create pantry inventory. It only describes what the user currently wants to search with.
-
-This distinction became important later when generating the grocery checklist.
+The selected ingredient IDs are stored in the shared user state and reused by the recommendation and grocery generation logic.
 
 ---
 
-## Entry 7 — Testing the Recommendation Logic
+## Phase 3: Recommendation Engine
 
-### What I worked on
+I implemented the recommendation engine as a pure, deterministic client-side function.
 
-I created automated tests for the recommendation engine.
+The engine supports three preferences:
 
-The test suite covered:
+- Quick & Easy
+- Something Different
+- No Preference
 
-- No ingredients selected
-- Quick & Easy with no ingredients
-- Something Different with no planned meals
-- Single ingredient matches
-- Multiple ingredient matches
-- No matches
-- One result
-- Two results
-- More than three results
-- Quick meal filtering
-- Planned meal exclusion
-- Empty weekly plan
-- Tie handling
-- Determinism
-- Matched/missing ingredient partitioning
-- Changing search inputs
+### Recommendation Rules
 
-### Result
+**Quick & Easy**
 
-The recommendation engine reached:
+Only meals that take 30 minutes or less are eligible. Eligible meals are ranked by the number of selected ingredients they match.
 
-**18 passed, 0 failed**
+**Something Different**
 
-The tests were useful for confirming that the recommendation logic behaved consistently before building later features on top of it.
+Meals already assigned to the weekly plan are excluded. The remaining meals are ranked according to ingredient matches.
+
+**No Preference**
+
+All meals are eligible and are ranked according to the number of selected ingredient matches.
+
+The engine returns a maximum of three recommendations.
+
+### Important Decision
+
+I deliberately avoided random recommendations or artificial weighting.
+
+When two meals have the same match count, their original position in the curated dataset determines their order. This keeps the recommendation system predictable and easy to test.
+
+### Challenge
+
+The recommendation system needed to handle situations where the user selected no ingredients or where no meals matched.
+
+### Solution
+
+I added explicit handling for both cases.
+
+With zero selected ingredients, the system still returns eligible meals according to the selected preference without pretending that any ingredients matched.
+
+When no meals match, the interface shows a dedicated no-match state instead of inventing results.
 
 ---
 
-# Phase 4 — Meal Details & Plan Assignment
+## Phase 4: Meal Details
 
-## Entry 8 — Building Meal Details
+I built the meal details experience using a dynamic `/meals/[id]` route.
 
-### What I worked on
-
-I created the dynamic meal details route:
-
-`/meals/[id]`
-
-The page displays:
+Each meal displays:
 
 - Meal name
 - Description
@@ -279,541 +128,220 @@ The page displays:
 - Preparation steps
 - Add to Weekly Plan action
 
-### Key decision
+### Decision
 
-The ingredient display changes depending on the user's current search ingredients.
+When a user arrives at a meal from the discovery flow, the application can show which ingredients they already selected and which ingredients they still need.
 
-Ingredients are separated into:
-
-- **You have**
-- **You need**
-
-If the user has not selected any ingredients, the page simply shows the complete ingredient list rather than suggesting that the user has none.
-
-This avoids misleading the user.
-
----
-
-## Entry 9 — Adding Meals to the Weekly Plan
-
-### What I worked on
-
-I implemented the Add to Plan interaction.
-
-The user can select one of seven days.
-
-If the day is empty, the meal is added immediately.
-
-If the day already contains a meal, a replacement confirmation dialog appears.
+This makes the recommendation useful beyond simply telling the user what to cook.
 
 ### Challenge
 
-I wanted to prevent accidental replacement of a meal that the user had already planned.
+I needed to make sure the interface did not incorrectly claim that the user had ingredients when they had not selected any.
 
 ### Solution
 
-I introduced a separate replacement confirmation dialog.
-
-The user must explicitly confirm the replacement before the existing meal is changed.
-
-Cancelling the dialog leaves the original plan untouched.
-
-### Testing
-
-The planner assignment tests verified:
-
-- Meal ID resolution
-- Ingredient mapping
-- Empty day assignment
-- Occupied day detection
-- Replacement confirmation
-- Replacement cancellation
-- Multi-day isolation
-- Persistence
-
-Result:
-
-**14 planner tests passed, 0 failed**
+The meal page uses the active ingredient selection to partition ingredients only when there is an active selection. If there are no selected ingredients, it displays the normal ingredient list instead.
 
 ---
 
-# Phase 5 — Weekly Meal Planner
+## Phase 5: Weekly Planner
 
-## Entry 10 — Building the Weekly Planner
+I implemented the seven-day weekly planner.
 
-### What I worked on
+Each day can contain one meal or remain empty.
 
-I replaced the planner placeholder with a complete seven-day planner.
+Users can:
 
-The planner contains:
-
-- Day 1 through Day 7
-- Planned meal information
-- View Meal action
-- Replace action
-- Remove action
-- Add Meal action for empty slots
-- Meal picker modal
-- Replacement confirmation
-
-### Key decision
-
-Each day is structurally limited to one meal.
-
-The weekly plan therefore contains exactly seven slots, with each slot containing either:
-
-- A meal ID
-- `null`
-
-This kept the data model simple and aligned with the intended V1 experience.
-
-### Challenge
-
-Users should be able to add meals directly from the planner without having to return to the discovery flow.
-
-### Solution
-
-I added a Meal Picker modal containing the curated meal library and a search field.
-
-This provides a second path for adding meals while keeping the main discovery experience focused.
-
----
-
-## Entry 11 — Handling Planner Edge Cases
-
-I added handling for invalid meal references.
-
-If a stored meal ID no longer exists in the curated dataset, the planner does not crash.
-
-Instead, it displays an unavailable meal reference and provides a Remove action.
-
-This was particularly important because user state is stored in `localStorage` and should be resilient to unexpected or stale data.
-
----
-
-# Phase 6 — Grocery Checklist
-
-## Entry 12 — Deriving the Grocery List
-
-### What I worked on
-
-I implemented a deterministic grocery generator.
-
-The grocery list is derived from:
-
-**Planned meals → their ingredients → subtract ingredients already available → deduplicate**
-
-The final checklist contains only ingredients the user needs to buy.
-
-### Key decision
-
-I did not add quantities or prices.
-
-The project specification did not provide reliable quantities or pricing data, so generating them would have meant inventing information.
-
-Instead, the grocery list focuses on identifying the ingredients required by the user's weekly plan.
-
----
-
-## Entry 13 — Deduplicating Grocery Items
-
-### What I worked on
-
-I handled ingredients shared by multiple meals.
-
-For example, if two planned meals require the same ingredient, the ingredient appears only once in the grocery list.
-
-The item also records the meals that require it.
-
-The interface can therefore show information such as:
-
-`Needed for: Jollof Rice, Fried Rice`
-
-### Challenge
-
-Removing duplicates while still explaining why an ingredient is needed required keeping the source meal information separately from the final grocery item.
-
-### Solution
-
-The grocery generator deduplicates ingredient IDs while collecting the names of all meals that require each ingredient.
-
----
-
-## Entry 14 — Grocery Checklist Interaction
-
-### What I worked on
-
-I added interactive checklist behavior.
-
-Users can check and uncheck grocery items.
-
-Checked items:
-
-- Display a check indicator
-- Become visually subdued
-- Receive a strikethrough
-- Remain in the list
-
-### Key decision
-
-Checking an item must not modify the user's available ingredients.
-
-A purchased grocery item and an ingredient already available at home represent two different concepts.
-
-Therefore:
-
-`purchasedGroceryItemIds`
-
-is stored separately from:
-
-`availableIngredientIds`
-
-This prevents the grocery checklist from accidentally turning into a pantry management system.
-
-### Testing
-
-The grocery generator test suite reached:
-
-**12 passed, 0 failed**
-
----
-
-# Phase 7 — PWA & Offline Support
-
-## Entry 15 — Making DishDash Installable
-
-### What I worked on
-
-I added PWA support with:
-
-- Web app manifest
-- 192px icon
-- 512px icon
-- Maskable icon
-- SVG icon
-- Service worker
-- Offline fallback page
-- Service worker registration
-
-The application uses a standalone display mode.
-
-### Key decision
-
-The PWA implementation remained deliberately lightweight.
-
-I did not add push notifications, background synchronization, accounts, or cloud synchronization because they were outside the V1 requirements.
-
----
-
-## Entry 16 — Designing the Offline Strategy
-
-### What I worked on
-
-I implemented service-worker caching for the core application routes and assets.
-
-The main strategy was:
-
-- Precache important application routes and shell assets.
-- Use network-first behavior for navigation.
-- Fall back to cached content when the network is unavailable.
-- Cache static assets using stale-while-revalidate behavior.
-
-### Why this worked for DishDash
-
-The application already uses static meal/ingredient data and `localStorage`.
-
-Recommendations, planning, meal details, and grocery generation do not require a backend request.
-
-This made DishDash a good fit for an offline-first client architecture.
-
-### Testing
-
-The PWA test suite reached:
-
-**15 passed, 0 failed**
-
----
-
-# Phase 8 — Accessibility, Responsive QA & End-to-End Verification
-
-## Entry 17 — Accessibility Review
-
-### What I worked on
-
-I reviewed the application's interactive elements for accessibility.
-
-This included:
-
-- Semantic HTML
-- Accessible labels
-- Keyboard navigation
-- Focus states
-- Dialog semantics
-- Checkbox states
-- Radio states
-- Tab states
-- Screen-reader announcements
-
-### Challenge
-
-Several interactions were visually clear but needed explicit accessible states and naming.
-
-### Solution
-
-I added attributes such as:
-
-- `aria-label`
-- `aria-labelledby`
-- `aria-describedby`
-- `aria-selected`
-- `aria-checked`
-- `aria-pressed`
-
-I also ensured important states were not communicated through color alone.
-
----
-
-## Entry 18 — Modal and Keyboard Interaction QA
-
-### What I worked on
-
-I reviewed the application's modals:
-
-- Add to Plan
-- Replace confirmation
-- Meal Picker
-
-The modals were tested for:
-
-- Escape-key dismissal
-- Keyboard navigation
-- Focus behavior
-- Backdrop interaction
-- Nested confirmation behavior
-
-### Important decision
-
-The replacement confirmation uses `role="alertdialog"` and focuses the Cancel action to reduce the possibility of accidental meal replacement.
-
----
-
-## Entry 19 — Responsive Design Review
-
-### What I worked on
-
-I checked the application across a range of viewport sizes:
-
-- 320px
-- 375px
-- 390px
-- 430px
-- 768px
-- 1024px
-- 1440px
-
-The application was checked for:
-
-- Horizontal overflow
-- Bottom navigation overlap
-- Modal behavior
-- Reading width
-- Grid behavior
-- Mobile spacing
-
-### Result
-
-The core layouts remain usable from small mobile screens through desktop widths.
-
----
-
-# UI Refinement
-
-## Entry 20 — Reconsidering the Visual Direction
-
-### What I worked on
-
-After the functional build was complete, I reviewed the interface visually rather than treating the first working design as final.
-
-I realized that the initial layout looked too much like a conventional responsive web application when viewed on a laptop.
-
-That did not fit the visual direction I wanted for DishDash.
-
-### New direction
-
-I wanted the application to feel like a **mobile product presented inside a desktop browser**, without looking like a bulky phone mockup.
-
-The inspiration came from a Dribbble reference with a compact, editorial, product-focused presentation.
-
----
-
-## Entry 21 — Creating a Narrower Mobile-First Frame
-
-### What I changed
-
-I introduced a narrower central application frame on larger screens.
-
-The intention was to make the user feel as though they were interacting with a phone-sized product even when using a laptop.
-
-However, I deliberately avoided:
-
-- A realistic phone frame
-- A phone bezel
-- Device buttons
-- Camera cutouts
-- Decorative mockup elements
-- Heavy shadows that make it look like a physical phone
-
-### Design decision
-
-The frame should feel like a **simple border around the application**, not a phone mockup.
-
-The border uses white because I liked the clean contrast it created around the application.
-
-The goal is subtle product framing rather than visual decoration.
-
----
-
-## Entry 22 — Changing the Typography
-
-### What I worked on
-
-I reconsidered the original typography because I wanted something smoother and more refined.
+- Add a meal
+- Replace a meal
+- Remove a meal
+- View meal details
 
 ### Decision
 
-I chose **Geist** as the primary typeface.
+I kept the planner intentionally simple. Each day has one meal slot because multiple meals per day were outside the scope of the first version.
 
-The decision was based on the visual qualities I wanted:
+### Challenge
 
-- Clean
-- Modern
-- Smooth
-- Minimal
-- Easy to read
-- Suitable for a product interface
+Replacing a planned meal could accidentally overwrite an existing selection.
 
-The typography change was intended to make the interface feel more polished without introducing unnecessary visual complexity.
+### Solution
 
----
+I added a replacement confirmation dialog. The user must explicitly confirm before an existing meal is replaced.
 
-## Entry 23 — Refining the Visual Language
-
-### What I worked on
-
-I continued refining the interface around the new direction.
-
-The goal was not to redesign the entire product into a decorative marketing website.
-
-Instead, I wanted the UI to feel:
-
-- Focused
-- Calm
-- Compact
-- Editorial
-- Mobile-first
-- Product-oriented
-
-The existing functionality remained the foundation while the visual presentation was refined.
-
-### Key principle
-
-I wanted the design to communicate the product's simplicity.
-
-DishDash is fundamentally about answering one question:
-
-**"What should I cook?"**
-
-The interface should therefore make that decision feel quick and uncomplicated.
+I also made the state update specific to the selected day so that changing one day cannot unintentionally modify the other six days.
 
 ---
 
-# Final Verification
+## Phase 6: Grocery Checklist
 
-## Entry 24 — Running the Full Test Suite
+I built the grocery checklist as a derived view of the weekly plan.
 
-### What I worked on
+The grocery list is generated from the ingredients required by planned meals. Ingredients that are already present in the user's active ingredient selection are removed from the shopping list.
 
-After the major implementation phases and UI refinements, I ran the complete automated test suite.
+Shared ingredients are deduplicated so that the same ingredient does not appear multiple times.
 
-The final verification covered:
+The checklist also shows which planned meals require each ingredient.
+
+### Decision
+
+I chose to derive the grocery list instead of storing a separate permanent grocery list.
+
+This means the grocery list always reflects the current weekly plan.
+
+### Challenge
+
+The grocery list needed to update when meals were added, removed, or replaced.
+
+### Solution
+
+The list is generated dynamically from the current weekly plan and available ingredients.
+
+Checking an item only changes its purchased state. It does not modify the user's available ingredients or weekly plan.
+
+---
+
+## Phase 7: PWA and Offline Support
+
+I added PWA support so the core DishDash experience could work offline.
+
+The implementation included:
+
+- Web app manifest
+- Application icons
+- Service worker
+- Offline fallback page
+- Client-side service worker registration
+
+### Decision
+
+Since the application does not depend on a backend for its core flows, offline support was a natural fit.
+
+The meals and ingredients are static, while user state is stored locally in the browser.
+
+### Challenge
+
+Offline functionality needed to work without interfering with the normal application experience.
+
+### Solution
+
+The service worker uses cached application routes and assets, with network-first handling for navigation and cache fallback when the network is unavailable.
+
+---
+
+## Phase 8: UI Refinement
+
+After the functional implementation was complete, I reviewed the interface visually and decided that the original presentation needed refinement.
+
+One of the main changes was moving away from a typical desktop web application appearance.
+
+### Design Direction
+
+I wanted DishDash to feel more like a focused mobile product, even when accessed from a laptop.
+
+Instead of creating a bulky phone mockup, I chose a simple narrow application frame with a white border. The goal was to suggest a phone-like interface without making the website look like a literal device mockup.
+
+I also changed the typography to **Geist** because it has a smoother, cleaner appearance that better suited the direction I wanted for the product.
+
+### Design Reference
+
+I used a Dribbble design as visual inspiration for the overall concept and presentation. The goal was not to copy the design, but to use the reference to guide the visual treatment of the application.
+
+### Challenge
+
+The application already had working functionality, so the challenge was improving the visual presentation without changing the core product behavior.
+
+### Solution
+
+I focused the refinement on:
+
+- Typography
+- Content width
+- Application framing
+- Spacing
+- Visual hierarchy
+- Mobile-first presentation
+- Simplifying the frame instead of using a decorative phone mockup
+
+The result keeps the application functional while giving it a more intentional product identity.
+
+---
+
+## Phase 9: Accessibility and QA
+
+I completed a final accessibility and quality review across the application.
+
+### Accessibility Checks
+
+I verified:
+
+- Semantic HTML
+- Keyboard navigation
+- Accessible modal behavior
+- Escape key handling
+- Accessible labels
+- Focus indicators
+- Screen reader status announcements
+- Non-color indicators for interactive states
+
+Interactive elements such as ingredient selections and grocery checklist items use accessible state attributes and visual indicators.
+
+### Responsive Checks
+
+I reviewed the application across mobile, tablet, and desktop widths.
+
+The layout was tested from approximately 320px through 1440px to check for:
+
+- Horizontal overflow
+- Navigation overlap
+- Modal layout issues
+- Content width problems
+- Responsive spacing
+
+### State Persistence
+
+I also tested localStorage persistence and recovery from invalid or corrupted stored data.
+
+The application falls back to a valid initial state instead of crashing when stored data cannot be used.
+
+---
+
+## Testing Summary
+
+The final implementation included automated tests for:
 
 - Data integrity
-- Recommendation engine
-- Weekly planner
-- Grocery generator
+- Recommendation logic
+- Weekly planner operations
+- Grocery generation
 - PWA functionality
 - End-to-end user journeys
 
-### Final results
+The final test run contained **74 automated test assertions**, all of which passed.
 
-**74 automated test assertions passed.**
+### Results
 
-Breakdown:
+- Data Integrity: Passed
+- Recommendation Engine: 18/18 passed
+- Weekly Planner: 14/14 passed
+- Grocery Generator: 12/12 passed
+- PWA & Offline: 15/15 passed
+- End-to-End: 15/15 passed
 
-| Test Suite | Result |
-|---|---:|
-| Data Integrity | 100% PASS |
-| Recommendation Engine | 18 / 18 PASS |
-| Weekly Planner | 14 / 14 PASS |
-| Grocery Generator | 12 / 12 PASS |
-| PWA & Offline | 15 / 15 PASS |
-| End-to-End Journeys | 15 / 15 PASS |
-
-### Additional verification
-
-TypeScript validation:
-
-**0 errors**
-
-Production build:
-
-**Successful**
+TypeScript compilation also completed without errors, and the production build completed successfully.
 
 ---
 
-# Final Reflection
+## Final Reflection
 
-## What I learned
+The biggest lesson from building DishDash was that a simple product does not need a complicated technical architecture.
 
-The biggest lesson from building DishDash was that a simple product still requires careful decisions.
+The core experience could be built with a curated dataset, deterministic client-side logic, and local persistence. Keeping the scope controlled made it possible to spend more time refining the actual user experience instead of building infrastructure that the product did not need.
 
-The application itself is intentionally small, but there were many details that could easily have made the experience inconsistent:
+Another important lesson was the value of separating product decisions from implementation decisions. For example, deciding that DishDash is not a pantry management system helped prevent features such as stock counts, expiration dates, and inventory tracking from gradually changing the product into something different.
 
-- What happens when no ingredients are selected?
-- What happens when nothing matches?
-- What happens when a planned meal is replaced?
-- What happens when stored data becomes invalid?
-- What happens when the user goes offline?
-- What happens when the same grocery item is required by multiple meals?
-- What happens when a user navigates with a keyboard?
+The final product focuses on one clear journey:
 
-Thinking through these cases helped me move beyond simply making screens and toward building a more complete product experience.
+**Help a user decide what to cook, plan it for the week, and know what they need to buy.**
 
-## What I would improve in a future version
-
-If DishDash were taken beyond V1, I would consider:
-
-- More meals and a larger ingredient library
-- Ingredient quantities
-- More flexible meal scheduling
-- Persistent accounts and cloud synchronization
-- Better grocery planning
-- Optional nutrition information
-- More sophisticated recommendations
-- Push notifications for meal planning
-- Background synchronization
-
-These were intentionally excluded from V1 so that the core product could remain simple and focused.
-
----
-
-# Final Project Status
-
-DishDash V1 is a functional client-side meal decision and weekly planning application.
-
-The completed experience covers:
-
-**Discover → Recommend → View Meal → Plan → Shop**
-
-The project was built with a deliberately constrained scope, tested throughout development, refined visually after the core functionality was complete, and verified through automated tests, accessibility checks, responsive checks, persistence checks, and offline/PWA verification.
-
+That simplicity was intentional.
