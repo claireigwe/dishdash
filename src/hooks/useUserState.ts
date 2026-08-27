@@ -74,6 +74,26 @@ export function useUserState() {
     [updateState]
   );
 
+  // Assign meal to a specific day slot in the 7-day weekly plan
+  const assignMealToDay = useCallback(
+    (dayIndex: number, mealId: string) => {
+      updateState((prev) => {
+        const currentDays = prev.weeklyPlan?.days ? prev.weeklyPlan.days : [];
+        const updatedDays = currentDays.map((day) =>
+          day.dayIndex === dayIndex ? { ...day, mealId } : day
+        );
+        return {
+          ...prev,
+          weeklyPlan: {
+            ...prev.weeklyPlan,
+            days: updatedDays,
+          },
+        };
+      });
+    },
+    [updateState]
+  );
+
   return {
     state,
     isLoaded,
@@ -84,5 +104,6 @@ export function useUserState() {
     removeIngredient,
     clearIngredients,
     setPreference,
+    assignMealToDay,
   };
 }

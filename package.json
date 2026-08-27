@@ -7,6 +7,7 @@
     "build": "next build",
     "validate:data": "node scripts/validateData.mjs",
     "test:engine": "node scripts/testRecommendationEngine.mjs",
+    "test:planner": "node scripts/testPlanAssignment.mjs",
     "start": "next start",
     "lint": "next lint"
   },

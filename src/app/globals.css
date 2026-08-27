@@ -141,10 +141,7 @@ img, svg {
   max-width: 100%;
 }
 
-/* ==========================================================================
-   Focus & Accessibility
-   ========================================================================== */
-
+/* Focus & Accessibility */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -163,7 +160,7 @@ img, svg {
 }
 
 /* ==========================================================================
-   Layout Foundation
+   App Shell Layout
    ========================================================================== */
 
 .app-shell {
@@ -366,6 +363,20 @@ img, svg {
 
 .badge-neutral {
   background-color: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+}
+
+.badge-empty {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-neutral {
   color: var(--color-text-secondary);
 }
 
@@ -970,6 +981,416 @@ img, svg {
 }
 
 /* ==========================================================================
+   Meal Detail Page Styles (Phase 4)
+   ========================================================================== */
+
+.meal-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.detail-top-nav {
+  display: flex;
+  align-items: center;
+}
+
+.plan-success-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-secondary-light);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-secondary-text);
+  font-size: var(--font-size-sm);
+  animation: fadeIn 200ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.meal-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.detail-badge-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.meal-detail-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.025em;
+  line-height: var(--line-height-tight);
+}
+
+.meal-detail-desc {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.detail-action-bar {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-2));
+  z-index: 20;
+  padding: var(--space-1) 0;
+  background-color: var(--color-bg);
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-radius: var(--radius-xl);
+}
+
+.detail-section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Ingredients list */
+.ingredients-split-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ingredient-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.group-heading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ingredient-item-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.item-have {
+  background-color: #E8F5E9;
+  color: #1B5E20;
+  border: 1px solid #C8E6C9;
+}
+
+.item-need {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.default-list .ingredient-item {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.bullet-icon {
+  font-weight: bold;
+}
+
+.bullet-dot {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+/* Preparation Steps */
+.instructions-step-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.instruction-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-text);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-content p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* ==========================================================================
+   Modals & Dialogs (Phase 4 Plan Assignment)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background-color: rgba(28, 25, 23, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  animation: fadeIn 150ms ease;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: var(--max-content-width);
+  max-height: 85vh;
+  background-color: var(--color-surface);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  animation: slideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.modal-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.modal-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.modal-close-btn {
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+/* 7 Days Selection List */
+.days-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.day-selection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.day-selection-item:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.day-selection-item.is-current-meal {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.day-selection-item.is-occupied {
+  border-color: var(--color-border);
+}
+
+.day-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-name-heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.day-date-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.day-status-right {
+  display: flex;
+  align-items: center;
+}
+
+.day-status-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.occupied-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.occupied-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.occupied-meal-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-footer {
+  margin-top: var(--space-2);
+}
+
+/* Replace Confirm Dialog */
+.replace-dialog {
+  max-width: 460px;
+  margin: auto;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  gap: var(--space-4);
+}
+
+.replace-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.warning-icon-wrapper {
+  color: var(--color-warning);
+  background-color: var(--color-warning-bg);
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.replace-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.replace-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.replace-prompt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.current-planned-meal-box {
+  padding: var(--space-3);
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.current-meal-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.replace-consequence {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.replace-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 
@@ -984,6 +1405,16 @@ img, svg {
 
   .preference-options-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .modal-backdrop {
+    align-items: center;
+    padding: var(--space-4);
+  }
+
+  .modal-container {
+    border-radius: var(--radius-xl);
+    max-height: 80vh;
   }
 }
 
