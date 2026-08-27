@@ -114,17 +114,39 @@ export function useUserState() {
     [updateState]
   );
 
+  // Toggle purchased state of a grocery item by ingredient ID
+  const toggleGroceryItem = useCallback(
+    (ingredientId: string) => {
+      updateState((prev) => {
+        const currentPurchased = Array.isArray(prev.purchasedGroceryItemIds)
+          ? prev.purchasedGroceryItemIds
+          : [];
+        const isPurchased = currentPurchased.includes(ingredientId);
+        const nextPurchased = isPurchased
+          ? currentPurchased.filter((id) => id !== ingredientId)
+          : [...currentPurchased, ingredientId];
+        return {
+          ...prev,
+          purchasedGroceryItemIds: nextPurchased,
+        };
+      });
+    },
+    [updateState]
+  );
+
   return {
     state,
     isLoaded,
     availableIngredientIds: state.availableIngredientIds,
     selectedPreference: state.selectedPreference,
     weeklyPlan: state.weeklyPlan,
+    purchasedGroceryItemIds: state.purchasedGroceryItemIds,
     toggleIngredient,
     removeIngredient,
     clearIngredients,
     setPreference,
     assignMealToDay,
     removeMealFromDay,
+    toggleGroceryItem,
   };
 }

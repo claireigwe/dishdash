@@ -8,6 +8,7 @@
     "validate:data": "node scripts/validateData.mjs",
     "test:engine": "node scripts/testRecommendationEngine.mjs",
     "test:planner": "node scripts/testPlanAssignment.mjs",
+    "test:grocery": "node scripts/testGroceryGenerator.mjs",
     "start": "next start",
     "lint": "next lint"
   },

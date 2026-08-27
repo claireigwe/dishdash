@@ -18,5 +18,6 @@ export interface GroceryItem {
   ingredientName: string;
   category: string;
   requiredByMealIds: string[];
+  requiredByMealNames?: string[];
   isPurchased: boolean;
 }
