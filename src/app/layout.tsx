@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppShell } from "@/components/common/AppShell";
+import { ServiceWorkerRegister } from "@/components/common/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "DishDash — Meal Decision Tool for Solo Cooks",
   description: "Stop wondering what to cook. Get tailored Nigerian meal suggestions from ingredients you already have.",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DishDash",
+  },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
   },
 };
 
@@ -27,8 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <ServiceWorkerRegister />
         <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
+

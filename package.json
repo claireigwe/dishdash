@@ -9,6 +9,9 @@
     "test:engine": "node scripts/testRecommendationEngine.mjs",
     "test:planner": "node scripts/testPlanAssignment.mjs",
     "test:grocery": "node scripts/testGroceryGenerator.mjs",
+    "test:pwa": "node scripts/testPWA.mjs",
+    "test:e2e": "node scripts/testEndToEnd.mjs",
+    "test": "node scripts/validateData.mjs && node scripts/testRecommendationEngine.mjs && node scripts/testPlanAssignment.mjs && node scripts/testGroceryGenerator.mjs && node scripts/testPWA.mjs && node scripts/testEndToEnd.mjs",
     "start": "next start",
     "lint": "next lint"
   },

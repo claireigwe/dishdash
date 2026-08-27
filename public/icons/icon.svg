@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#D95328" />
+  <!-- DishDash Pot / Cloche Icon -->
+  <circle cx="256" cy="140" r="24" fill="#FFFFFF" />
+  <path d="M 120 280 C 120 180, 392 180, 392 280 Z" fill="#FFFFFF" />
+  <rect x="100" y="290" width="312" height="24" rx="12" fill="#FFFFFF" />
+  <!-- Steam lines -->
+  <path d="M 220 100 Q 230 75 220 50" stroke="#FDEEE9" stroke-width="8" stroke-linecap="round" fill="none" />
+  <path d="M 256 95 Q 266 70 256 45" stroke="#FDEEE9" stroke-width="8" stroke-linecap="round" fill="none" />
+  <path d="M 292 100 Q 302 75 292 50" stroke="#FDEEE9" stroke-width="8" stroke-linecap="round" fill="none" />
+</svg>
