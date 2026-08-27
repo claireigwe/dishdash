@@ -67,12 +67,18 @@ export default function DiscoveryHomePage() {
           />
         </section>
 
-        {/* Sticky/Bottom Primary Action */}
-        <div className="discovery-action-bar">
-          <button type="submit" className="btn btn-primary btn-block btn-lg">
+        {/* Floating Bottom-Right Action */}
+        <div className="discovery-floating-action-bar">
+          <button
+            type="submit"
+            className={`btn btn-floating-find ${
+              ingredientCount > 0 ? "btn-find-active" : "btn-find-idle"
+            }`}
+            aria-label="Find Meals"
+          >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -84,11 +90,7 @@ export default function DiscoveryHomePage() {
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span>
-              {ingredientCount > 0
-                ? `Find Meals (${ingredientCount} item${ingredientCount > 1 ? "s" : ""} selected)`
-                : "Find Meals with Selected Preference"}
-            </span>
+            <span>Find Meals</span>
           </button>
         </div>
       </form>

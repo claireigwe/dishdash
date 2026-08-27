@@ -22,6 +22,7 @@ export function IngredientSelector({
 }: IngredientSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const gridRef = React.useRef<HTMLDivElement>(null);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -35,6 +36,14 @@ export function IngredientSelector({
       return matchesSearch && matchesCategory;
     });
   }, [searchTerm, activeCategory]);
+
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat);
+    setSearchTerm(""); // Clear search so category items are immediately visible
+    if (gridRef.current) {
+      gridRef.current.scrollTop = 0;
+    }
+  };
 
   return (
     <div className="ingredient-selector">
@@ -58,7 +67,12 @@ export function IngredientSelector({
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            if (activeCategory !== "All" && e.target.value.trim().length > 0) {
+              setActiveCategory("All"); // Search across all categories when typing
+            }
+          }}
           placeholder="Search ingredients (e.g. Rice, Yam, Eggs)..."
           className="search-input"
           aria-label="Search available ingredients"
@@ -99,7 +113,11 @@ export function IngredientSelector({
               type="button"
               role="tab"
               aria-selected={isActive}
-              onClick={() => setActiveCategory(cat)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCategoryChange(cat);
+              }}
               className={`category-pill ${isActive ? "active" : ""}`}
             >
               {cat}
@@ -108,8 +126,19 @@ export function IngredientSelector({
         })}
       </div>
 
+      {/* Category count indicator */}
+      <div className="category-results-info">
+        <span className="category-info-label">
+          {activeCategory === "All" ? "All Ingredients" : activeCategory}
+        </span>
+        <span className="category-info-count">
+          {filteredIngredients.length} item{filteredIngredients.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
       {/* Ingredient Chip Grid */}
       <div
+        ref={gridRef}
         className="ingredient-grid"
         role="group"
         aria-label="Ingredients selection"

@@ -10,26 +10,20 @@ export function Header({ title, showBack = false }: HeaderProps) {
   return (
     <header className="app-header">
       <div className="app-header-inner">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div className="header-brand-group">
           {showBack && (
             <Link
               href="/"
               aria-label="Go back to Home"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0.25rem",
-                color: "var(--color-text-secondary)",
-              }}
+              className="header-back-button"
             >
               <svg
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -38,21 +32,11 @@ export function Header({ title, showBack = false }: HeaderProps) {
             </Link>
           )}
           <Link href="/" className="app-brand">
-            <span>DishDash</span>
+            <span className="brand-logo-text">DishDash</span>
             <span className="app-brand-badge">Solo Cook</span>
           </Link>
         </div>
-        {title && (
-          <span
-            style={{
-              fontSize: "var(--font-size-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            {title}
-          </span>
-        )}
+        {title && <span className="header-page-title">{title}</span>}
       </div>
     </header>
   );

@@ -75,28 +75,14 @@ export function DaySlotCard({
       {/* Body: Empty vs Occupied vs Invalid */}
       {!isOccupied ? (
         <div className="slot-empty-content">
-          <p className="empty-slot-text">No meal scheduled for this day.</p>
+          <p className="empty-slot-text">No meal scheduled for this day</p>
           <button
             type="button"
             onClick={() => onAddMeal(day.dayIndex)}
-            className="btn btn-secondary btn-block btn-add-meal"
+            className="btn btn-add-meal"
             aria-label={`Add meal to ${dayName}`}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Add Meal</span>
+            + Add Meal
           </button>
         </div>
       ) : !meal ? (
