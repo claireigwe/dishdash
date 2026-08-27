@@ -1,257 +1,280 @@
 # DishDash
 
-DishDash is a simple meal decision and weekly planning tool designed to help solo cooks decide what to make using ingredients they already have.
+DishDash is a simple meal decision and weekly planning app for solo cooks. It helps users decide what to cook based on ingredients they already have, then turn those decisions into a weekly meal plan and grocery checklist.
 
 ## What is DishDash?
 
-DishDash is a client-side, offline-first web application focused on reducing the friction of deciding what to cook.
+DishDash is built around a simple flow:
 
-The core experience allows users to:
+**Discover → Recommend → View Meal → Plan → Shop**
 
-- Select ingredients they currently have available
-- Filter ingredients by category
-- Choose a recommendation preference
-- Receive up to three meal recommendations
+Users can:
+
+- Select ingredients they already have
+- Choose a meal preference
+- Get up to three meal recommendations
 - See which ingredients they have and which they still need
-- View complete meal details and preparation instructions
+- View full meal instructions
 - Add meals to a seven-day weekly plan
 - Replace or remove planned meals
-- Automatically generate a grocery checklist
-- Check off grocery items
-- Continue using the core application offline
+- Generate a grocery checklist from their weekly plan
+- Check off grocery items as they shop
+- Continue using the core app when offline
 
-## Who is it designed for?
+The app uses a curated collection of 20 Nigerian meals and 41 ingredients.
 
-DishDash is designed primarily for **solo cooks** who want a simple way to decide what to cook without spending too much time searching through recipes.
+## Who is it for?
 
-It is particularly useful for people who:
+DishDash is designed for people who cook for themselves and often find themselves asking:
 
-- Have a limited set of ingredients available
-- Want meal suggestions based on what they already have
-- Prefer Nigerian meals
-- Want to plan meals for the week
-- Want their grocery list generated automatically
-- Need a lightweight tool that does not require an account
+> "What should I cook today?"
+
+It is especially useful for solo cooks who have ingredients at home but need help deciding what to make.
 
 ## The Problem
 
-Deciding what to cook can become surprisingly frustrating. A person may already have several ingredients at home but still struggle to decide what meal they can make with them.
+Deciding what to cook can become repetitive and time-consuming, especially when you already have ingredients available but are not sure what meals you can make with them.
 
-DishDash approaches the problem from the opposite direction:
+Existing recipe platforms often focus on large recipe collections and discovery. DishDash takes a more focused approach by starting with what the user already has and helping them make a decision.
 
-> Start with what you have, then decide what to cook.
-
-The experience follows a simple flow:
-
-**Available ingredients → Meal recommendations → Meal details → Weekly plan → Grocery checklist**
-
-Rather than overwhelming users with hundreds of recipes, DishDash presents a small number of relevant options.
+The goal is not to provide endless recipes. The goal is to make the decision easier.
 
 ## Core Features
 
 ### Ingredient Discovery
 
-Users can search and select ingredients from a curated ingredient library.
+Users can search and filter ingredients by category, then select the ingredients they want to use for their search.
 
-Ingredients are organized into:
+Available categories include:
 
 - Staples & Grains
 - Proteins
 - Vegetables & Produce
 - Oils & Seasonings
 
-Selected ingredients can be removed individually or cleared entirely.
+Selected ingredients can be removed individually or cleared at once.
 
 ### Meal Recommendations
 
-DishDash uses a deterministic recommendation engine based on selected ingredients.
+DishDash supports three recommendation preferences:
 
-Users can choose:
+- **Quick & Easy:** Only meals that take 30 minutes or less
+- **Something Different:** Excludes meals already assigned to the weekly plan
+- **No Preference:** Considers all meals
 
-- **Quick & Easy** — meals that take 30 minutes or less
-- **Something Different** — excludes meals already assigned to the weekly plan
-- **No Preference** — ranks meals primarily by ingredient matches
+Recommendations are ranked by the number of selected ingredients that match each meal.
 
-The system returns a maximum of three recommendations and explains what the user has, what is missing, and why the meal was recommended.
+The system is deterministic, so the same input produces the same result.
 
 ### Meal Details
 
-Each meal page includes:
+Each meal has its own detail page with:
 
 - Meal name
 - Description
 - Category
 - Cooking time
-- Ingredient list
-- Available vs. missing ingredients
+- Ingredients
+- Ingredient availability
 - Preparation instructions
 - Add to Weekly Plan action
 
-### Weekly Meal Planner
+When ingredients have been selected during discovery, the meal page separates them into:
+
+- **You have**
+- **You need**
+
+### Weekly Planner
 
 Users can plan one meal for each of seven days.
 
-The planner supports adding, replacing, removing, and viewing meals. Changes are persisted locally in the browser.
+The planner supports:
+
+- Adding meals
+- Replacing meals
+- Removing meals
+- Viewing meal details
+- Selecting meals directly from the meal library
+
+Replacing an existing meal requires confirmation.
 
 ### Grocery Checklist
 
-DishDash automatically generates a grocery checklist from planned meals.
+The grocery checklist is generated from the user's planned meals.
 
-The generator:
+The process is:
 
-1. Collects ingredients from planned meals
-2. Removes ingredients already marked as available
-3. Deduplicates shared ingredients
-4. Groups ingredients by category
-5. Shows which planned meals require each ingredient
+**Planned meals → Required ingredients → Remove available ingredients → Deduplicate**
+
+Ingredients needed by multiple meals appear once and show the meals that require them.
+
+Users can check and uncheck grocery items, and those states are saved locally.
 
 ### Offline Support
 
-DishDash is designed to work offline. A service worker caches the core application shell and static assets, while recommendations, planning, meal details, and grocery generation operate from static data and local browser storage.
+DishDash is built as an offline-first client-side application.
 
-## Technology & Tools
+A service worker caches the main application routes and assets. The core experience can continue to work without an internet connection because recommendations, meal data, planning, and grocery generation do not depend on a backend.
+
+DishDash can also be installed as a PWA on supported devices.
+
+## Technologies and Tools
 
 ### Technologies
 
-- **Next.js** — Application framework
-- **React** — User interface
-- **TypeScript** — Type-safe development
-- **Vanilla CSS** — Styling and responsive layouts
-- **localStorage** — Client-side persistence
-- **Service Worker** — Offline functionality and caching
-- **Web App Manifest** — Progressive Web App support
-- **Geist** — Primary typeface
+- Next.js
+- React
+- TypeScript
+- Vanilla CSS
+- HTML
+- JavaScript
 
-### Development Tools
+### Browser APIs and Architecture
 
-- **Figma** — Interface design and visual exploration
-- **Antigravity IDE** — Development environment
-- **Git & GitHub** — Version control and project hosting
+- `localStorage` for user state persistence
+- Service Worker API for offline support
+- Web App Manifest for PWA installation
 
-## Architecture
+### Development
 
-DishDash was intentionally built as a **client-side, offline-first application**.
+The application was developed in Antigravity using an AI-assisted development workflow.
 
-The application does not use:
+The project uses a client-side architecture with curated static data rather than a backend or database.
 
-- A backend API
-- A database
-- Authentication
-- User accounts
-- Cloud synchronization
-- AI services
+## Project Structure
 
-Meal and ingredient data are static datasets stored within the application.
+```text
+src/
+├── app/
+│   ├── groceries/
+│   ├── meals/[id]/
+│   ├── planner/
+│   ├── recommendations/
+│   ├── offline/
+│   └── page.tsx
+├── components/
+│   ├── common/
+│   ├── discovery/
+│   ├── groceries/
+│   ├── planner/
+│   └── recommendations/
+├── hooks/
+├── lib/
+└── types/
 
-User-specific state is maintained locally and persisted through `localStorage`.
+public/
+├── icons/
+├── manifest.json
+└── sw.js
 
-The main user state includes:
+scripts/
+├── validateData.mjs
+├── testRecommendationEngine.mjs
+├── testPlanAssignment.mjs
+├── testGroceryGenerator.mjs
+├── testPWA.mjs
+└── testEndToEnd.mjs
+
+README.md
+journal.md
+```
+
+## Important Product Decisions
+
+### Keep the product focused
+
+DishDash was intentionally kept small.
+
+The application does not include accounts, authentication, a backend, AI, nutrition tracking, pricing, budgeting, pantry management, social features, ratings, reviews, or grocery delivery.
+
+These features could be considered in a future version, but they were not necessary for the core experience.
+
+### Use deterministic recommendations
+
+The recommendation engine does not randomly select meals.
+
+Ingredient matches determine the ranking, while equal matches preserve the original dataset order.
+
+This makes the recommendations predictable and easier to test.
+
+### Treat selected ingredients as a search state
+
+Selected ingredients are not treated as permanent pantry inventory.
+
+They describe what the user currently has available for the purpose of finding meals.
+
+This distinction also prevents the grocery checklist from becoming a pantry management system.
+
+### Keep grocery generation honest
+
+The grocery generator only uses information available in the dataset.
+
+No quantities or prices are invented because the dataset does not provide reliable information for them.
+
+### Keep state in one place
+
+User-specific state is managed through the existing `useUserState` hook and persisted through the existing storage layer.
+
+The main state includes:
 
 - `availableIngredientIds`
 - `selectedPreference`
 - `weeklyPlan`
 - `purchasedGroceryItemIds`
 
-## Important Design & Product Decisions
+This avoids creating separate storage systems for individual features.
 
-### 1. Start with ingredients instead of recipes
+### Design for mobile first
 
-The primary interaction begins with:
+The interface was designed around a narrow, mobile-oriented experience.
 
-**"What do you have?"**
+On larger screens, the application remains intentionally narrow instead of expanding to fill the entire browser window. The goal is for the user to feel like they are using a mobile product even when they are on a laptop.
 
-This directly addresses the problem of deciding what to cook based on existing ingredients.
+The visual treatment uses a simple border around the application rather than a realistic phone mockup.
 
-### 2. Limit recommendations to three meals
+## Challenges and Solutions
 
-Instead of overwhelming users with a large recipe library, DishDash returns a maximum of three recommendations to keep the decision focused.
+### Keeping recommendations explainable
 
-### 3. Explain recommendations
+A recommendation system can easily become a black box.
 
-Recommendations show the ingredients the user has, the ingredients they still need, and the reason the meal was selected.
+To keep the results understandable, each recommendation shows matched ingredients and missing ingredients. This gives the user a clear reason for why a meal was suggested.
 
-### 4. Keep recommendations deterministic
+### Handling meals with no ingredient matches
 
-Given the same ingredients, preference, and weekly plan, the engine produces the same result. Equal matches preserve the original dataset order rather than using randomization.
+There are situations where the selected ingredients do not match any meal.
 
-### 5. Separate search ingredients from pantry inventory
+Instead of displaying unrelated meals as filler, DishDash shows a dedicated no-match state and gives the user a way to adjust their search.
 
-Selected ingredients represent the user's current search context. They are not treated as permanent pantry inventory.
+### Replacing planned meals safely
 
-This keeps V1 focused on meal decision-making rather than household inventory management.
+Replacing an existing meal could accidentally overwrite the user's plan.
 
-### 6. Derive the grocery list
+The solution was to require explicit confirmation before replacement. Cancelling the confirmation leaves the original meal unchanged.
 
-The grocery checklist is generated from the weekly meal plan rather than requiring users to manually build a shopping list.
+### Keeping the grocery list accurate
 
-**Weekly Plan → Required Ingredients → Grocery Checklist**
+The same ingredient can be required by several planned meals.
 
-### 7. One meal per day
+The grocery generator deduplicates those ingredients while keeping track of all meals that require them.
 
-V1 supports exactly one meal per day across seven days. This keeps the planning experience intentionally simple.
+### Handling invalid stored state
 
-### 8. Client-side persistence
+Because user state is stored in the browser, invalid or corrupted data is possible.
 
-User state is stored locally instead of requiring authentication or a database.
+The storage layer validates the stored state and falls back to the default state when the stored data is invalid.
 
-### 9. Offline-first architecture
+### Supporting offline use
 
-The core functionality uses static data and client-side state, making the application naturally suited to offline use.
+The application does not depend on a backend for its core features, which makes offline use possible.
 
-## UI & Design Direction
+A service worker caches the core application shell and routes, while `localStorage` preserves the user's state.
 
-The interface was designed around a **focused, mobile-first experience**.
+## Testing
 
-Although DishDash is a web application, the main application interface maintains a narrow, phone-like content area on larger screens. The intention is to make the experience feel like using a focused mobile product rather than a traditional wide desktop dashboard.
+DishDash includes automated tests for the major pieces of the application.
 
-The visual direction emphasizes:
-
-- Minimalism
-- Clear hierarchy
-- Generous spacing
-- Smooth typography
-- Restrained use of color
-- Simple borders and surfaces
-- Focused interactions
-- A narrow application frame
-
-The application uses **Geist** as its primary typeface.
-
-A simple white outer border frames the application on larger screens without turning the interface into a literal phone mockup.
-
-## Challenges & How They Were Solved
-
-### Recommendation Logic
-
-A useful recommendation system was needed without AI or a backend. A deterministic recommendation engine was built to evaluate ingredient matches and apply the selected preference.
-
-### Different Recommendation Preferences
-
-Each preference has its own eligibility rules. Quick & Easy excludes meals over 30 minutes, Something Different excludes planned meals, and No Preference considers all meals.
-
-### Grocery List Deduplication
-
-Multiple meals can require the same ingredient. The grocery generator deduplicates shared ingredients while retaining the names of all meals that require them.
-
-### State Persistence
-
-Because there is no backend, a centralized user state hook coordinates application state and persists it through `localStorage`.
-
-The storage layer also handles malformed or invalid data safely.
-
-### Offline Support
-
-A service worker was introduced to cache the core application shell, static assets, and important routes. Navigation uses network-first behavior with cached fallbacks and an offline page.
-
-### Accessibility
-
-The final QA process covered semantic HTML, keyboard navigation, accessible modal interactions, ARIA states, focus indicators, screen-reader announcements, accessible naming, and keyboard dismissal of dialogs.
-
-## Testing & Verification
-
-DishDash includes automated tests covering the major application systems.
-
-The final test suite contains **74 automated test assertions**, all of which passed.
+The final test run covered:
 
 | Test Suite | Result |
 |---|---:|
@@ -260,164 +283,143 @@ The final test suite contains **74 automated test assertions**, all of which pas
 | Weekly Planner | 14 / 14 PASS |
 | Grocery Generator | 12 / 12 PASS |
 | PWA & Offline | 15 / 15 PASS |
-| End-to-End User Journeys | 15 / 15 PASS |
-| **Total** | **74 / 74 PASS** |
+| End-to-End Journeys | 15 / 15 PASS |
+
+**Total: 74 automated test assertions passed.**
 
 Additional verification:
 
-- TypeScript compilation: **0 errors**
-- Production build: **Successful**
-- Responsive verification: **320px – 1440px**
-- Local state persistence: **Verified**
-- Corrupt storage recovery: **Verified**
-- Offline core flows: **Verified**
+- TypeScript check: 0 errors
+- Production build: successful
+- Responsive checks: 320px to 1440px
+- Accessibility checks: completed
+- Persistence checks: completed
+- Offline checks: completed
 
-## Project Scope
+## Scope of V1
 
-DishDash V1 intentionally focuses on a small, defined problem.
+The following were intentionally excluded from DishDash V1:
 
-The following were intentionally excluded:
-
+- Accounts
 - Authentication
-- User accounts
 - Backend APIs
-- Databases
+- Database
 - Cloud synchronization
-- AI recommendations
+- AI
 - Nutrition tracking
 - Calorie tracking
 - Ingredient quantities
-- Ingredient pricing
+- Ingredient prices
 - Budgeting
 - Grocery delivery
-- Pantry inventory management
+- Pantry inventory
 - Expiration tracking
 - Stock levels
-- Ratings and reviews
 - Social features
+- Ratings and reviews
 - User-submitted recipes
 - Calendar synchronization
-- Multiple meal slots per day
-- Push notifications
-- Background synchronization
-
-These exclusions were deliberate decisions to keep V1 focused on the core meal decision and planning experience.
-
-## Project Structure
-
-```text
-dishdash/
-├── public/
-│   ├── icons/
-│   ├── manifest.json
-│   └── sw.js
-│
-├── scripts/
-│   ├── generateIcons.mjs
-│   ├── testEndToEnd.mjs
-│   ├── testGroceryGenerator.mjs
-│   ├── testPlanAssignment.mjs
-│   ├── testPWA.mjs
-│   ├── testRecommendationEngine.mjs
-│   └── validateData.mjs
-│
-├── src/
-│   ├── app/
-│   │   ├── groceries/
-│   │   ├── meals/
-│   │   ├── planner/
-│   │   ├── recommendations/
-│   │   ├── offline/
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── components/
-│   │   ├── common/
-│   │   ├── discovery/
-│   │   ├── groceries/
-│   │   ├── planner/
-│   │   └── recommendations/
-│   │
-│   ├── hooks/
-│   ├── lib/
-│   ├── types/
-│   └── data/
-│
-├── package.json
-├── README.md
-└── journal.md
-```
-
-## Development Process
-
-DishDash was developed incrementally through defined implementation phases.
-
-### Phase 1 — Foundation
-
-Established the application structure, static datasets, shared state model, and initial routes.
-
-### Phase 2 — Core Data & Application Foundations
-
-Established the data validation and architectural foundations required by the rest of the application.
-
-### Phase 3 — Recommendation Engine & Discovery
-
-Built the ingredient discovery interface and deterministic recommendation engine.
-
-### Phase 4 — Meal Details & Plan Assignment
-
-Added meal detail pages and the ability to assign meals to specific days.
-
-### Phase 5 — Weekly Planner
-
-Built the complete seven-day planner with add, replace, remove, and view actions.
-
-### Phase 6 — Grocery Checklist
-
-Added automatic grocery list generation from the weekly plan.
-
-### Phase 7 — PWA & Offline Support
-
-Added the web app manifest, icons, service worker, offline fallback, and installation support.
-
-### Phase 8 — Accessibility & QA
-
-Completed accessibility verification, responsive checks, persistence testing, offline verification, and end-to-end testing.
-
-## Current Status
-
-**DishDash V1 is complete.**
-
-The application has been implemented, tested, and verified across its core user journeys.
-
-It is:
-
-- Functional
-- Responsive
-- Accessible
-- Offline-ready
-- Installable as a PWA
-- Covered by automated tests
+- Multiple meals per day
 
 ## Future Improvements
 
-Potential future versions could explore:
+If DishDash were developed further, possible improvements would include:
 
-- User accounts and cloud synchronization
-- Larger meal libraries
-- Personalized recommendations
+- A larger meal and ingredient library
 - Ingredient quantities
-- More detailed grocery planning
-- Nutrition information
-- Multiple meals per day
-- Meal history
-- Saved favorite meals
-- Calendar integration
+- More flexible meal scheduling
+- Accounts and cloud synchronization
+- More advanced grocery planning
+- Optional nutrition information
+- More sophisticated recommendation logic
 - Push notifications
+- Background synchronization
 
-These features are intentionally outside the scope of the current V1.
+These were left out of V1 so the core product could remain focused.
 
-## License
+## Running the Project
 
-This project was created as part of a development and product-building assignment.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+Open the local development URL shown by Next.js in your browser.
+
+## Validation and Testing Commands
+
+Validate the data:
+
+```bash
+npm run validate:data
+```
+
+Run the recommendation engine tests:
+
+```bash
+npm run test:engine
+```
+
+Run the planner tests:
+
+```bash
+npm run test:planner
+```
+
+Run the grocery generator tests:
+
+```bash
+npm run test:grocery
+```
+
+Run the PWA tests:
+
+```bash
+npm run test:pwa
+```
+
+Run the end-to-end tests:
+
+```bash
+npm run test:e2e
+```
+
+Run all test suites:
+
+```bash
+npm test
+```
+
+Run the TypeScript check:
+
+```bash
+npx tsc --noEmit
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Final Status
+
+DishDash V1 is a functional client-side meal decision and weekly planning application.
+
+The completed experience is:
+
+**Discover → Recommend → View Meal → Plan → Shop**
+
+The project was built with a deliberately constrained scope and verified through automated testing, accessibility checks, responsive checks, persistence checks, and offline/PWA testing.
+
+## Project Documentation
+
+- `README.md` explains the project, product decisions, technologies, challenges, and scope.
+- `journal.md` documents the development process and decisions made throughout the project.
