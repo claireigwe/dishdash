@@ -1,17 +1,17 @@
 # DishDash
 
-DishDash is a simple meal decision and weekly planning app for solo cooks. It helps users decide what to cook based on ingredients they already have, then turn those decisions into a weekly meal plan and grocery checklist.
+DishDash is a simple meal decision and weekly planning app for solo cooks. It helps users decide what to cook by combining what they are in the mood for with the ingredients they already have, then turns those decisions into a weekly meal plan and grocery checklist.
 
 ## What is DishDash?
 
 DishDash is built around a simple flow:
 
-**Discover → Recommend → View Meal → Plan → Shop**
+**Choose a Preference → Select Ingredients → Get Recommendations → View Meal → Plan → Shop**
 
 Users can:
 
+- Choose what they are in the mood for
 - Select ingredients they already have
-- Choose a meal preference
 - Get up to three meal recommendations
 - See which ingredients they have and which they still need
 - View full meal instructions
@@ -33,11 +33,21 @@ It is especially useful for solo cooks who have ingredients at home but need hel
 
 ## The Problem
 
-Deciding what to cook can become repetitive and time-consuming, especially when you already have ingredients available but are not sure what meals you can make with them.
+Deciding what to cook is not always as simple as looking at the ingredients available at home.
 
-Existing recipe platforms often focus on large recipe collections and discovery. DishDash takes a more focused approach by starting with what the user already has and helping them make a decision.
+A person may have ingredients available but still struggle to decide what to make because they are considering other things, such as what they are craving, how much time they have, how much energy they have, or what fits their current mood.
 
-The goal is not to provide endless recipes. The goal is to make the decision easier.
+DishDash started with an ingredient-first approach:
+
+> "I have these ingredients. What can I make?"
+
+After speaking with potential users, I realised that this is only one way people approach the decision.
+
+Someone may instead start with:
+
+> "What am I in the mood for?"
+
+The current DishDash experience therefore starts with the user's meal preference before asking what ingredients they have.
 
 ## Core Features
 
@@ -56,15 +66,21 @@ Selected ingredients can be removed individually or cleared at once.
 
 ### Meal Recommendations
 
-DishDash supports three recommendation preferences:
+DishDash now starts the discovery flow by asking what the user is in the mood for.
 
-- **Quick & Easy:** Only meals that take 30 minutes or less
-- **Something Different:** Excludes meals already assigned to the weekly plan
-- **No Preference:** Considers all meals
+The available preferences are:
 
-Recommendations are ranked by the number of selected ingredients that match each meal.
+- **Something Spicy**
+- **Something Filling**
+- **Something Quick**
+- **Something Sweet**
+- **Surprise Me**
 
-The system is deterministic, so the same input produces the same result.
+After choosing a preference, the user selects the ingredients they have available.
+
+The recommendation system then uses both pieces of information to determine suitable meals.
+
+This approach treats the user's preference as part of the meal decision rather than as an additional filter applied after ingredient selection.
 
 ### Meal Details
 
@@ -196,6 +212,18 @@ The recommendation engine does not randomly select meals.
 Ingredient matches determine the ranking, while equal matches preserve the original dataset order.
 
 This makes the recommendations predictable and easier to test.
+
+### Start with user intent
+
+The original discovery flow started with ingredient selection and placed meal preference afterward.
+
+After collecting user feedback, I reconsidered this assumption. The responses showed that people do not always begin the meal decision with what they have available. Cravings, mood, time, energy, budget, and household preferences can also influence the decision.
+
+I therefore changed the discovery flow to ask about the user's preference first:
+
+**Preference → Ingredients → Recommendations**
+
+This makes the user's intent the starting point while still using available ingredients as an important constraint.
 
 ### Treat selected ingredients as a search state
 
@@ -334,6 +362,8 @@ If DishDash were developed further, possible improvements would include:
 - More sophisticated recommendation logic
 - Push notifications
 - Background synchronization
+- Free-text meal preferences
+- Natural-language meal requests
 
 These were left out of V1 so the core product could remain focused.
 
@@ -413,9 +443,9 @@ npm run build
 
 DishDash V1 is a functional client-side meal decision and weekly planning application.
 
-The completed experience is:
+The current experience is:
 
-**Discover → Recommend → View Meal → Plan → Shop**
+**Choose Preference → Select Ingredients → Recommend → View Meal → Plan → Shop**
 
 The project was built with a deliberately constrained scope and verified through automated testing, accessibility checks, responsive checks, persistence checks, and offline/PWA testing.
 

@@ -31,19 +31,27 @@ export default function DiscoveryHomePage() {
       <section className="discovery-hero">
         <h1 className="hero-title">What should I cook today?</h1>
         <p className="hero-subtitle">
-          Select what you have at home, choose a preference, and get tailored Nigerian meal suggestions.
+          Choose what sounds good, pick what you have at home, and get tailored Nigerian meal suggestions.
         </p>
       </section>
 
       <form onSubmit={handleFindMeals} className="discovery-form">
-        {/* Ingredient Selection Section */}
+        {/* Step 1: Preference Selection Section (What are you in the mood for?) */}
+        <section className="discovery-section" aria-labelledby="section-preference">
+          <PreferenceSelector
+            selectedPreference={selectedPreference}
+            onSelect={setPreference}
+          />
+        </section>
+
+        {/* Step 2: Ingredient Selection Section (What ingredients do you have?) */}
         <section className="discovery-section" aria-labelledby="section-ingredients">
           <div className="section-header">
             <h2 id="section-ingredients" className="section-label">
-              1. What ingredients do you have?
+              2. What ingredients do you have?
             </h2>
             <span className="section-subtitle">
-              Select any items on hand (or continue without selecting)
+              Select what you have at home, or continue without selecting.
             </span>
           </div>
 
@@ -59,21 +67,11 @@ export default function DiscoveryHomePage() {
           />
         </section>
 
-        {/* Preference Selection Section */}
-        <section className="discovery-section" aria-labelledby="section-preference">
-          <PreferenceSelector
-            selectedPreference={selectedPreference}
-            onSelect={setPreference}
-          />
-        </section>
-
         {/* Floating Bottom-Right Action */}
         <div className="discovery-floating-action-bar">
           <button
             type="submit"
-            className={`btn btn-floating-find ${
-              ingredientCount > 0 ? "btn-find-active" : "btn-find-idle"
-            }`}
+            className="btn btn-floating-find"
             aria-label="Find Meals"
           >
             <svg
@@ -97,3 +95,4 @@ export default function DiscoveryHomePage() {
     </div>
   );
 }
+

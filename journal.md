@@ -345,3 +345,258 @@ The final product focuses on one clear journey:
 **Help a user decide what to cook, plan it for the week, and know what they need to buy.**
 
 That simplicity was intentional.
+
+
+# Week 4 — Testing the DishDash Assumption
+
+## What I Worked On
+
+After completing the first version of DishDash, I wanted to test some of the assumptions behind the product rather than immediately continuing to add features.
+
+The original DishDash experience was designed around helping people decide what to cook based on the ingredients they already have.
+
+This week, I collected responses from seven people about how they actually decide what to cook, what makes the decision difficult, and what they do when they cannot decide.
+
+## What I Learned
+
+The responses showed that deciding what to cook is influenced by more than just the ingredients available at home.
+
+People mentioned several factors, including:
+
+- What ingredients they already have
+- What they are currently craving
+- Their mood
+- Their budget
+- How much time they have
+- How much energy they have to cook
+- The preferences of other people in their household
+- Whether they already have a meal plan
+
+One thing that stood out to me was that having ingredients available does not necessarily mean someone will cook.
+
+Some respondents described situations where they had food at home but still decided to order food, eat out, or prepare something else because they were tired or did not feel like eating what they had.
+
+I also found that some people already use systems to make the decision easier, such as meal timetables or written plans.
+
+## What Changed in My Thinking
+
+When I first started DishDash, I was primarily thinking about the problem as:
+
+> "I have ingredients. What can I make with them?"
+
+The conversations made me realise that this is only one way people approach the meal decision.
+
+Someone might instead start with:
+
+> "What do I feel like eating?"
+
+Or:
+
+> "What can I make without spending much?"
+
+Or:
+
+> "What can I make quickly because I am tired?"
+
+This means I need to be more careful about assuming that ingredients are always the user's starting point.
+
+## What I Chose
+
+I chose to investigate the meal-decision problem further before adding more features to DishDash.
+
+Rather than immediately adding things such as budgeting, pantry management, ingredient pricing, or AI recommendations, I want to understand which part of the problem is most valuable for DishDash to solve first.
+
+## What I Parked
+
+For now, I am parking:
+
+- Budget tracking
+- Ingredient price tracking
+- Pantry inventory
+- Nutrition tracking
+- AI-based recommendations
+- Grocery delivery
+
+These are possible directions, but the research so far is not enough for me to justify adding them to the product.
+
+## Next Step
+
+The next step is to use what I learned from the conversations to reconsider the DishDash experience and determine whether the current ingredient-first approach still makes sense.
+
+Any changes I make should be based on what I have learned rather than simply adding more functionality.
+
+# DishDash Project Journal
+
+A chronological record of the decisions, experiments, changes, and lessons from building DishDash.
+
+---
+
+# Week 4 — Testing the DishDash Assumption
+
+## What I Worked On
+
+After completing the first version of DishDash, I wanted to test some of the assumptions behind the product rather than immediately continuing to add features.
+
+The original DishDash experience was designed around helping people decide what to cook based on the ingredients they already have.
+
+This week, I collected responses from seven people about how they actually decide what to cook, what makes the decision difficult, and what they do when they cannot decide.
+
+## What I Learned
+
+The responses showed that deciding what to cook is influenced by more than just the ingredients available at home.
+
+People mentioned several factors, including:
+
+- What ingredients they already have
+- What they are currently craving
+- Their mood
+- Their budget
+- How much time they have
+- How much energy they have to cook
+- The preferences of other people in their household
+- Whether they already have a meal plan
+
+One thing that stood out to me was that having ingredients available does not necessarily mean someone will cook.
+
+Some respondents described situations where they had food at home but still decided to order food, eat out, or prepare something else because they were tired or did not feel like eating what they had.
+
+I also found that some people already use systems to make the decision easier, such as meal timetables or written plans.
+
+## What Changed in My Thinking
+
+When I first started DishDash, I was primarily thinking about the problem as:
+
+> "I have ingredients. What can I make with them?"
+
+The conversations made me realise that this is only one way people approach the meal decision.
+
+Someone might instead start with:
+
+> "What do I feel like eating?"
+
+Or:
+
+> "What can I make without spending much?"
+
+Or:
+
+> "What can I make quickly because I am tired?"
+
+This means I need to be more careful about assuming that ingredients are always the user's starting point.
+
+## What I Chose
+
+I chose to investigate the meal-decision problem further before adding more features to DishDash.
+
+Rather than immediately adding things such as budgeting, pantry management, ingredient pricing, or AI recommendations, I want to understand which part of the problem is most valuable for DishDash to solve first.
+
+## What I Parked
+
+For now, I am parking:
+
+- Budget tracking
+- Ingredient price tracking
+- Pantry inventory
+- Nutrition tracking
+- AI-based recommendations
+- Grocery delivery
+
+These are possible directions, but the research so far is not enough for me to justify adding them to the product.
+
+## Next Step
+
+The next step is to use what I learned from the conversations to reconsider the DishDash experience and determine whether the current ingredient-first approach still makes sense.
+
+Any changes I make should be based on what I have learned rather than simply adding more functionality.
+
+---
+
+# Reworking the Meal Decision Flow
+
+## What I Worked On
+
+Based on the customer responses, I revisited the first step of the DishDash experience.
+
+The original flow asked users to select the ingredients they had at home first and then choose a meal preference.
+
+The research made me question whether ingredients should always be the starting point.
+
+I decided to test a different approach where the user first describes what they are in the mood for and then selects the ingredients they have available.
+
+## The Change
+
+The new flow starts with:
+
+**1. What are you in the mood for?**
+
+Users can choose from:
+
+- Something spicy
+- Something filling
+- Something quick
+- Something sweet
+- Surprise me
+
+The user can then continue to:
+
+**2. What ingredients do you have?**
+
+This keeps ingredients as an important part of the recommendation, while recognising that the user's motivation for cooking can come from somewhere else.
+
+## Why I Made This Change
+
+The questionnaire showed that people do not always begin the meal decision with their available ingredients.
+
+Some people start with a craving, while others consider their mood, budget, available time, or energy.
+
+The new flow allows DishDash to capture that intention before asking about ingredients.
+
+I also noticed a usability issue with the previous design.
+
+The meal preference was already available on the homepage, but it appeared after the ingredient selection. Because of its position, users could easily focus on the ingredients and forget that they had selected a preference.
+
+Moving the preference to the beginning makes it a more visible part of the decision-making process.
+
+## What I Chose Not to Change
+
+I am not introducing free-text meal requests or AI recommendations yet.
+
+For example, users are not currently asked to type something like:
+
+> "I want something spicy."
+
+Instead, the first version uses a small set of predefined preferences.
+
+This keeps the recommendation logic simpler while allowing me to test whether preference-based recommendations are useful in the first place.
+
+Free-text input and AI recommendations can be explored later if the product needs a more flexible way to understand what someone wants.
+
+## Current Flow
+
+The updated experience is now:
+
+**Choose what you are in the mood for → Select ingredients → Find meals → Review recommendations**
+
+This is the version I will continue testing before introducing additional functionality.
+
+## What I Learned
+
+The main lesson from this iteration is that the product should not assume that the user's available ingredients are the beginning of the meal decision.
+
+Ingredients answer:
+
+> "What can I make?"
+
+But the user's preference can answer:
+
+> "What do I actually want right now?"
+
+DishDash now tries to capture both.
+
+## Next Step
+
+I will continue testing the updated flow and observe whether starting with the user's preference produces recommendations that feel more relevant.
+
+The next changes should continue to come from what I learn from users rather than from adding features simply because they are technically possible.
+
+---

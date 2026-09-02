@@ -31,11 +31,16 @@ export default function RecommendationsPage() {
     );
   }
 
-  const preferenceLabelMap = {
-    quick: "Quick & Easy (≤30m)",
-    different: "Something Different",
-    none: "All Meals",
+  const preferenceLabelMap: Record<string, string> = {
+    spicy: "Something spicy",
+    filling: "Something filling",
+    quick: "Something quick",
+    sweet: "Something sweet",
+    surprise: "Surprise me",
   };
+
+  const prefLabel = preferenceLabelMap[selectedPreference] || "Surprise me";
+  const count = availableIngredientIds.length;
 
   return (
     <div className="recommendations-container">
@@ -57,7 +62,7 @@ export default function RecommendationsPage() {
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            <span>Adjust Ingredients</span>
+            <span>Adjust Search</span>
           </Link>
           <span className="results-count-badge">
             {recommendations.length} {recommendations.length === 1 ? "Meal" : "Meals"} Found
@@ -66,11 +71,7 @@ export default function RecommendationsPage() {
 
         <h1 className="recommendations-title">Recommended for You</h1>
         <p className="recommendations-summary-text">
-          {availableIngredientIds.length > 0
-            ? `Based on ${availableIngredientIds.length} selected ingredient${
-                availableIngredientIds.length > 1 ? "s" : ""
-              } • Preference: ${preferenceLabelMap[selectedPreference]}`
-            : `Preference: ${preferenceLabelMap[selectedPreference]}`}
+          Based on {count} selected ingredient{count === 1 ? "" : "s"} · {prefLabel}
         </p>
       </div>
 

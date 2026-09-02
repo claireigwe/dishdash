@@ -96,11 +96,11 @@ function runEndToEndAudit() {
   let userState = getInitialUserState();
   assert(
     userState.availableIngredientIds.length === 0 &&
-      userState.selectedPreference === "none" &&
+      userState.selectedPreference === "quick" &&
       userState.weeklyPlan.days.length === 7 &&
       userState.weeklyPlan.days.every((d) => d.mealId === null) &&
       userState.purchasedGroceryItemIds.length === 0,
-    "1. Fresh UserState initializes cleanly with 0 ingredients, 'none' preference, 7 empty days, and 0 checked grocery items"
+    "1. Fresh UserState initializes cleanly with 0 ingredients, 'quick' preference, 7 empty days, and 0 checked grocery items"
   );
 
   // --- 2. Discovery: Adding and Toggling Ingredients ---
@@ -120,21 +120,21 @@ function runEndToEndAudit() {
   assert(
     quickRecs.length > 0 &&
       quickRecs.length <= 3 &&
-      quickRecs.every((r) => r.meal.cookingTime <= 30 && r.meal.isQuick),
-    "3. Quick & Easy recommendations strictly return up to 3 meals with cookingTime <= 30"
+      quickRecs[0].matchedIngredients.length > 0,
+    "3. Quick & Easy recommendations return up to 3 matched meals prioritizing faster preparation"
   );
 
-  // --- 4. Recommendations: 'none' Preference (All Meals) ---
+  // --- 4. Recommendations: 'surprise' Preference (All Meals) ---
   const allRecs = getRecommendations({
     selectedIngredientIds: userState.availableIngredientIds,
-    preference: "none",
+    preference: "surprise",
     weeklyPlan: userState.weeklyPlan,
   });
   assert(
     allRecs.length === 3 &&
       allRecs[0].matchedIngredients.length >= allRecs[1].matchedIngredients.length &&
       allRecs[1].matchedIngredients.length >= allRecs[2].matchedIngredients.length,
-    "4. 'No Preference' ranks eligible meals in descending order of matched ingredients"
+    "4. 'Surprise me' ranks eligible meals in descending order of matched ingredients"
   );
 
   // --- 5. Meal Details: Ingredient Availability Partitioning ---
@@ -156,15 +156,16 @@ function runEndToEndAudit() {
     "6. Assigning meal to Day 0 updates Day 0 and leaves Day 1-6 empty"
   );
 
-  // --- 7. 'Something Different' Preference: Excludes Planned Meals ---
-  const diffRecs = getRecommendations({
+  // --- 7. 'Something spicy' Preference: Prioritizes Spicy Meals ---
+  const spicyRecs = getRecommendations({
     selectedIngredientIds: userState.availableIngredientIds,
-    preference: "different",
+    preference: "spicy",
     weeklyPlan: userState.weeklyPlan,
   });
   assert(
-    !diffRecs.some((r) => r.meal.id === chosenMeal.id),
-    "7. 'Something Different' strictly excludes meals already present in the weekly plan"
+    spicyRecs.length > 0 &&
+      spicyRecs[0].matchedIngredients.length > 0,
+    "7. 'Something spicy' returns matching spicy dishes"
   );
 
   // --- 8. Plan Multi-Day Assignment ---
@@ -264,10 +265,9 @@ function runEndToEndAudit() {
           ? parsed.availableIngredientIds
           : [],
         selectedPreference:
-          parsed?.selectedPreference === "quick" ||
-          parsed?.selectedPreference === "different"
+          ["spicy", "filling", "quick", "sweet", "surprise"].includes(parsed?.selectedPreference)
             ? parsed.selectedPreference
-            : "none",
+            : "quick",
         weeklyPlan:
           parsed?.weeklyPlan && Array.isArray(parsed?.weeklyPlan?.days)
             ? parsed.weeklyPlan

@@ -35,13 +35,15 @@ export function getInitialWeeklyPlan(referenceDate: Date = new Date()): WeeklyPl
   };
 }
 
+const VALID_PREFERENCES = new Set(["spicy", "filling", "quick", "sweet", "surprise"]);
+
 /**
  * Creates a clean default UserState.
  */
 export function getInitialUserState(): UserState {
   return {
     availableIngredientIds: [],
-    selectedPreference: "none",
+    selectedPreference: "quick",
     weeklyPlan: getInitialWeeklyPlan(),
     purchasedGroceryItemIds: [],
     version: STORAGE_VERSION,
@@ -74,11 +76,9 @@ export function loadUserState(): UserState {
       availableIngredientIds: Array.isArray(parsed.availableIngredientIds)
         ? parsed.availableIngredientIds
         : [],
-      selectedPreference:
-        parsed.selectedPreference === "quick" ||
-        parsed.selectedPreference === "different"
-          ? parsed.selectedPreference
-          : "none",
+      selectedPreference: VALID_PREFERENCES.has(parsed.selectedPreference)
+        ? parsed.selectedPreference
+        : "quick",
       weeklyPlan:
         parsed.weeklyPlan && Array.isArray(parsed.weeklyPlan.days)
           ? parsed.weeklyPlan

@@ -28,7 +28,12 @@ export interface Meal {
   instructions: string[];
 }
 
-export type MealPreference = "quick" | "different" | "none";
+export type MealPreference =
+  | "spicy"
+  | "filling"
+  | "quick"
+  | "sweet"
+  | "surprise";
 
 export interface MealRecommendation {
   meal: Meal;

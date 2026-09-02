@@ -14,19 +14,29 @@ interface PreferenceOption {
 
 const PREFERENCE_OPTIONS: PreferenceOption[] = [
   {
+    id: "spicy",
+    label: "Something spicy",
+    description: "Hot, pepper-packed & aromatic dishes",
+  },
+  {
+    id: "filling",
+    label: "Something filling",
+    description: "Hearty swallows, rich beans & heavy carbs",
+  },
+  {
     id: "quick",
-    label: "Quick & Easy",
-    description: "Ready in 30 minutes or less",
+    label: "Something quick",
+    description: "Fast, easy meals ready in 30 mins or less",
   },
   {
-    id: "different",
-    label: "Something Different",
-    description: "Avoid meals already in your plan",
+    id: "sweet",
+    label: "Something sweet",
+    description: "Sweet ripe plantain & coconut delicacies",
   },
   {
-    id: "none",
-    label: "No Preference",
-    description: "Rank purely by ingredient match",
+    id: "surprise",
+    label: "Surprise me",
+    description: "Open to any delicious Nigerian favorite",
   },
 ];
 
@@ -37,14 +47,18 @@ export function PreferenceSelector({
   return (
     <div className="preference-selector-container">
       <div className="preference-header">
-        <label className="section-label">Meal Preference</label>
-        <span className="section-subtitle">Choose how to rank your suggestions</span>
+        <h2 id="section-preference" className="section-label">
+          1. What are you in the mood for?
+        </h2>
+        <span className="section-subtitle">
+          Choose what sounds good, and we'll find meals that match.
+        </span>
       </div>
 
       <div
         className="preference-options-grid"
         role="radiogroup"
-        aria-label="Meal preference selection"
+        aria-label="What are you in the mood for?"
       >
         {PREFERENCE_OPTIONS.map((opt) => {
           const isSelected = selectedPreference === opt.id;
@@ -71,3 +85,4 @@ export function PreferenceSelector({
     </div>
   );
 }
+

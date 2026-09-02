@@ -33,8 +33,14 @@ export function RecommendationCard({
 
   if (preference === "quick" && meal.isQuick) {
     explanationParts.push(`Ready in ${meal.cookingTime} mins`);
-  } else if (preference === "different") {
-    explanationParts.push("Not in your weekly plan");
+  } else if (preference === "spicy") {
+    explanationParts.push("Spicy & flavor-packed");
+  } else if (preference === "filling") {
+    explanationParts.push("Hearty & filling");
+  } else if (preference === "sweet") {
+    explanationParts.push("Sweet & savory profile");
+  } else if (preference === "surprise") {
+    explanationParts.push("Curated Nigerian favorite");
   }
 
   return (
