@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { UserState } from "@/types/state";
 import { MealPreference } from "@/types/meal";
+import { MealSlot } from "@/types/planner";
 import { loadUserState, saveUserState, getInitialUserState } from "@/lib/storage";
 
 export function useUserState() {
@@ -74,14 +75,30 @@ export function useUserState() {
     [updateState]
   );
 
-  // Assign meal to a specific day slot in the 7-day weekly plan
-  const assignMealToDay = useCallback(
-    (dayIndex: number, mealId: string) => {
+  // Assign meal to a specific slot (breakfast, lunch, dinner, snack) in the 7-day weekly plan
+  const assignMealToSlot = useCallback(
+    (dayIndex: number, slot: MealSlot, mealId: string) => {
       updateState((prev) => {
         const currentDays = prev.weeklyPlan?.days ? prev.weeklyPlan.days : [];
-        const updatedDays = currentDays.map((day) =>
-          day.dayIndex === dayIndex ? { ...day, mealId } : day
-        );
+        const updatedDays = currentDays.map((day) => {
+          if (day.dayIndex !== dayIndex) return day;
+          const currentSlots = day.slots || {
+            breakfast: null,
+            lunch: null,
+            dinner: null,
+            snack: null,
+          };
+          const updatedSlots = {
+            ...currentSlots,
+            [slot]: mealId,
+          };
+          return {
+            ...day,
+            slots: updatedSlots,
+            // Keep legacy mealId synced to lunch
+            mealId: updatedSlots.lunch,
+          };
+        });
         return {
           ...prev,
           weeklyPlan: {
@@ -94,14 +111,29 @@ export function useUserState() {
     [updateState]
   );
 
-  // Remove meal from a specific day slot in the 7-day weekly plan
-  const removeMealFromDay = useCallback(
-    (dayIndex: number) => {
+  // Remove meal from a specific slot in the 7-day weekly plan
+  const removeMealFromSlot = useCallback(
+    (dayIndex: number, slot: MealSlot) => {
       updateState((prev) => {
         const currentDays = prev.weeklyPlan?.days ? prev.weeklyPlan.days : [];
-        const updatedDays = currentDays.map((day) =>
-          day.dayIndex === dayIndex ? { ...day, mealId: null } : day
-        );
+        const updatedDays = currentDays.map((day) => {
+          if (day.dayIndex !== dayIndex) return day;
+          const currentSlots = day.slots || {
+            breakfast: null,
+            lunch: null,
+            dinner: null,
+            snack: null,
+          };
+          const updatedSlots = {
+            ...currentSlots,
+            [slot]: null,
+          };
+          return {
+            ...day,
+            slots: updatedSlots,
+            mealId: updatedSlots.lunch,
+          };
+        });
         return {
           ...prev,
           weeklyPlan: {
@@ -112,6 +144,48 @@ export function useUserState() {
       });
     },
     [updateState]
+  );
+
+  // Legacy helper: Assign meal to a day slot (defaults to "lunch" if slot omitted)
+  const assignMealToDay = useCallback(
+    (dayIndex: number, mealId: string, slot: MealSlot = "lunch") => {
+      assignMealToSlot(dayIndex, slot, mealId);
+    },
+    [assignMealToSlot]
+  );
+
+  // Legacy helper: Remove meal from a day (if slot provided, removes that slot; if omitted, clears all slots for day)
+  const removeMealFromDay = useCallback(
+    (dayIndex: number, slot?: MealSlot) => {
+      if (slot) {
+        removeMealFromSlot(dayIndex, slot);
+      } else {
+        updateState((prev) => {
+          const currentDays = prev.weeklyPlan?.days ? prev.weeklyPlan.days : [];
+          const updatedDays = currentDays.map((day) => {
+            if (day.dayIndex !== dayIndex) return day;
+            return {
+              ...day,
+              slots: {
+                breakfast: null,
+                lunch: null,
+                dinner: null,
+                snack: null,
+              },
+              mealId: null,
+            };
+          });
+          return {
+            ...prev,
+            weeklyPlan: {
+              ...prev.weeklyPlan,
+              days: updatedDays,
+            },
+          };
+        });
+      }
+    },
+    [removeMealFromSlot, updateState]
   );
 
   // Toggle purchased state of a grocery item by ingredient ID
@@ -147,6 +221,8 @@ export function useUserState() {
     setPreference,
     assignMealToDay,
     removeMealFromDay,
+    assignMealToSlot,
+    removeMealFromSlot,
     toggleGroceryItem,
   };
 }

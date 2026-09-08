@@ -6,11 +6,13 @@ import { WeeklyPlan, DayPlan } from "@/types/planner";
 import { MEAL_MAP } from "@/data/meals";
 import { ReplaceConfirmDialog } from "./ReplaceConfirmDialog";
 
+import { MealSlot, MEAL_SLOTS } from "@/types/planner";
+
 interface AddToPlanModalProps {
   isOpen: boolean;
   meal: Meal;
   weeklyPlan?: WeeklyPlan;
-  onAssignMeal: (dayIndex: number, mealId: string) => void;
+  onAssignMeal: (dayIndex: number, mealId: string, slot?: MealSlot) => void;
   onClose: () => void;
   onSuccess: (dayName: string) => void;
 }
@@ -45,9 +47,20 @@ export function AddToPlanModal({
   onClose,
   onSuccess,
 }: AddToPlanModalProps) {
+  // Determine default slot based on meal metadata
+  const defaultSlot: MealSlot =
+    meal.mealType === "breakfast"
+      ? "breakfast"
+      : meal.mealType === "snack" || meal.mealType === "street_food"
+      ? "snack"
+      : "lunch";
+
+  const [selectedSlot, setSelectedSlot] = useState<MealSlot>(defaultSlot);
+
   const [replacingDay, setReplacingDay] = useState<{
     dayIndex: number;
     dayLabel: string;
+    slotLabel: string;
     existingMealId: string;
   } | null>(null);
 
@@ -73,35 +86,49 @@ export function AddToPlanModal({
       : Array.from({ length: 7 }, (_, i) => ({
           dayIndex: i,
           dateStr: "",
+          slots: {
+            breakfast: null,
+            lunch: null,
+            dinner: null,
+            snack: null,
+          },
           mealId: null,
         }));
 
+  const slotLabel = selectedSlot.charAt(0).toUpperCase() + selectedSlot.slice(1);
+
   const handleDaySelect = (day: DayPlan) => {
     const { dayName } = formatDayLabel(day);
+    const existingMealId = day.slots
+      ? day.slots[selectedSlot]
+      : selectedSlot === "lunch"
+      ? day.mealId
+      : null;
 
-    if (!day.mealId) {
-      // Empty day: Assign immediately
-      onAssignMeal(day.dayIndex, meal.id);
-      onSuccess(dayName);
+    if (!existingMealId) {
+      // Empty slot: Assign immediately
+      onAssignMeal(day.dayIndex, meal.id, selectedSlot);
+      onSuccess(`${dayName} • ${slotLabel}`);
       onClose();
-    } else if (day.mealId === meal.id) {
-      // Already assigned to this day
-      onSuccess(dayName);
+    } else if (existingMealId === meal.id) {
+      // Already assigned to this slot
+      onSuccess(`${dayName} • ${slotLabel}`);
       onClose();
     } else {
-      // Occupied by another meal: Show replacement confirmation
+      // Occupied by another meal: Show replacement confirmation for this slot
       setReplacingDay({
         dayIndex: day.dayIndex,
         dayLabel: dayName,
-        existingMealId: day.mealId,
+        slotLabel,
+        existingMealId,
       });
     }
   };
 
   const handleConfirmReplace = () => {
     if (replacingDay) {
-      onAssignMeal(replacingDay.dayIndex, meal.id);
-      onSuccess(replacingDay.dayLabel);
+      onAssignMeal(replacingDay.dayIndex, meal.id, selectedSlot);
+      onSuccess(`${replacingDay.dayLabel} • ${replacingDay.slotLabel}`);
       setReplacingDay(null);
       onClose();
     }
@@ -158,13 +185,47 @@ export function AddToPlanModal({
             </button>
           </div>
 
+          {/* Slot Selector Tabs */}
+          <div className="slot-picker-tab-row" role="tablist" aria-label="Select meal slot">
+            {MEAL_SLOTS.map((slot) => {
+              const isSelected = selectedSlot === slot;
+              const label = slot.charAt(0).toUpperCase() + slot.slice(1);
+              const icon =
+                slot === "breakfast"
+                  ? "☀️"
+                  : slot === "lunch"
+                  ? "🍲"
+                  : slot === "dinner"
+                  ? "🌙"
+                  : "🥪";
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => setSelectedSlot(slot)}
+                  className={`slot-tab-btn ${isSelected ? "slot-tab-active" : ""}`}
+                >
+                  <span aria-hidden="true">{icon}</span>
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* 7 Days List */}
           <div className="days-selection-list" role="list" aria-label="Available plan days">
             {days.map((day) => {
               const { dayName, dateFormatted } = formatDayLabel(day);
-              const isOccupied = typeof day.mealId === "string" && day.mealId.length > 0;
-              const isCurrentMeal = day.mealId === meal.id;
-              const occupiedMeal = isOccupied ? MEAL_MAP[day.mealId!] : null;
+              const slotMealId = day.slots
+                ? day.slots[selectedSlot]
+                : selectedSlot === "lunch"
+                ? day.mealId
+                : null;
+              const isOccupied = typeof slotMealId === "string" && slotMealId.length > 0;
+              const isCurrentMeal = slotMealId === meal.id;
+              const occupiedMeal = isOccupied ? MEAL_MAP[slotMealId!] : null;
 
               return (
                 <button
@@ -177,10 +238,10 @@ export function AddToPlanModal({
                   role="listitem"
                   aria-label={`${dayName}, ${dateFormatted}. ${
                     isCurrentMeal
-                      ? `Already assigned to ${meal.name}`
+                      ? `Already assigned to ${meal.name} for ${slotLabel}`
                       : isOccupied
-                      ? `Currently has ${occupiedMeal?.name || "another meal"}. Click to replace.`
-                      : "Empty. Click to add meal."
+                      ? `${slotLabel} currently has ${occupiedMeal?.name || "another meal"}. Click to replace.`
+                      : `Empty ${slotLabel}. Click to schedule.`
                   }`}
                 >
                   <div className="day-info-left">
@@ -191,18 +252,18 @@ export function AddToPlanModal({
                   <div className="day-status-right">
                     {isCurrentMeal ? (
                       <span className="day-status-badge badge-primary">
-                        ✓ Scheduled Here
+                        ✓ {slotLabel} Scheduled
                       </span>
                     ) : isOccupied ? (
                       <div className="occupied-preview">
-                        <span className="occupied-label">Scheduled:</span>
+                        <span className="occupied-label">{slotLabel}:</span>
                         <span className="occupied-meal-title">
                           {occupiedMeal?.name || "Meal"}
                         </span>
                       </div>
                     ) : (
                       <span className="day-status-badge badge-empty">
-                        + Empty Slot
+                        + {slotLabel} Empty
                       </span>
                     )}
                   </div>
@@ -229,6 +290,7 @@ export function AddToPlanModal({
         <ReplaceConfirmDialog
           isOpen={Boolean(replacingDay)}
           dayLabel={replacingDay.dayLabel}
+          slotName={replacingDay.slotLabel}
           existingMealId={replacingDay.existingMealId}
           newMeal={meal}
           onConfirm={handleConfirmReplace}

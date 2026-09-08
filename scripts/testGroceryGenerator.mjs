@@ -278,6 +278,48 @@ function runTests() {
     "12. Adding all ingredients to available list dynamically drops grocery items to 0"
   );
 
+  // 13. Multiple slots on the same day generate combined ingredients
+  const multiSlotDay = generateGroceryList({
+    weeklyPlan: {
+      weekStartDate: "2026-08-24",
+      days: [
+        {
+          dayIndex: 0,
+          dateStr: "2026-08-24",
+          slots: {
+            breakfast: "indomie_noodle_sandwich",
+            lunch: "jollof_rice",
+            dinner: "suya_tortilla_wrap",
+            snack: "nigerian_egg_roll",
+          },
+        },
+      ],
+    },
+    availableIngredientIds: [],
+  });
+  const multiSlotIngs = new Set([
+    ...MEAL_MAP["indomie_noodle_sandwich"].ingredients,
+    ...MEAL_MAP["jollof_rice"].ingredients,
+    ...MEAL_MAP["suya_tortilla_wrap"].ingredients,
+    ...MEAL_MAP["nigerian_egg_roll"].ingredients,
+  ]);
+  assert(
+    multiSlotDay.length === multiSlotIngs.size &&
+      multiSlotDay.some((i) => i.ingredientId === "instant_noodles") &&
+      multiSlotDay.some((i) => i.ingredientId === "bread") &&
+      multiSlotDay.some((i) => i.ingredientId === "tortilla_wraps"),
+    "13. Multi-slot Day: All 4 slots on Day 0 combine into complete deduplicated grocery list"
+  );
+
+  // 14. Shared ingredients across different slots correctly list all source meals
+  const onionItem = multiSlotDay.find((i) => i.ingredientId === "onion");
+  assert(
+    onionItem &&
+      onionItem.requiredByMealNames.includes("Indomie Noodle Sandwich") &&
+      onionItem.requiredByMealNames.includes("Jollof Rice"),
+    "14. Shared ingredients across different slots on the same day correctly deduplicate and list source meal names"
+  );
+
   console.log("-----------------------------------------");
   console.log(`Phase 6 Tests Summary: ${passed} Passed, ${failed} Failed.`);
   console.log("=========================================");

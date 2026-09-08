@@ -98,9 +98,16 @@ function runEndToEndAudit() {
     userState.availableIngredientIds.length === 0 &&
       userState.selectedPreference === "quick" &&
       userState.weeklyPlan.days.length === 7 &&
-      userState.weeklyPlan.days.every((d) => d.mealId === null) &&
+      userState.weeklyPlan.days.every((d) =>
+        d.slots
+          ? d.slots.breakfast === null &&
+            d.slots.lunch === null &&
+            d.slots.dinner === null &&
+            d.slots.snack === null
+          : d.mealId === null
+      ) &&
       userState.purchasedGroceryItemIds.length === 0,
-    "1. Fresh UserState initializes cleanly with 0 ingredients, 'quick' preference, 7 empty days, and 0 checked grocery items"
+    "1. Fresh UserState initializes cleanly with 0 ingredients, 'quick' preference, 7 empty days with 28 empty slots, and 0 checked grocery items"
   );
 
   // --- 2. Discovery: Adding and Toggling Ingredients ---
@@ -119,9 +126,9 @@ function runEndToEndAudit() {
   });
   assert(
     quickRecs.length > 0 &&
-      quickRecs.length <= 3 &&
+      quickRecs.length <= 5 &&
       quickRecs[0].matchedIngredients.length > 0,
-    "3. Quick & Easy recommendations return up to 3 matched meals prioritizing faster preparation"
+    "3. Quick & Easy recommendations return up to 5 matched meals prioritizing faster preparation"
   );
 
   // --- 4. Recommendations: 'surprise' Preference (All Meals) ---
@@ -130,11 +137,17 @@ function runEndToEndAudit() {
     preference: "surprise",
     weeklyPlan: userState.weeklyPlan,
   });
+  const allRecsUniqueIds = new Set(allRecs.map((r) => r.meal.id));
   assert(
-    allRecs.length === 3 &&
-      allRecs[0].matchedIngredients.length >= allRecs[1].matchedIngredients.length &&
-      allRecs[1].matchedIngredients.length >= allRecs[2].matchedIngredients.length,
-    "4. 'Surprise me' ranks eligible meals in descending order of matched ingredients"
+    allRecs.length === 5 &&
+      allRecsUniqueIds.size === 5 &&
+      allRecs[0].role === "best_match" &&
+      allRecs[1].role === "easiest" &&
+      allRecs[2].role === "wildcard" &&
+      allRecs[3].role === "another_good_match" &&
+      allRecs[4].role === "another_option" &&
+      allRecs.every((r) => r.matchedIngredients.length > 0),
+    "4. 'Surprise me' returns up to 5 distinct recommendation roles (Best Match, Easiest, Wildcard, Good Match, Another Option) matching available ingredients"
   );
 
   // --- 5. Meal Details: Ingredient Availability Partitioning ---
@@ -150,10 +163,11 @@ function runEndToEndAudit() {
 
   // --- 6. Plan Assignment: Scheduling to Day 0 ---
   userState.weeklyPlan.days[0].mealId = chosenMeal.id;
+  userState.weeklyPlan.days[0].slots.lunch = chosenMeal.id;
   assert(
-    userState.weeklyPlan.days[0].mealId === chosenMeal.id &&
-      userState.weeklyPlan.days[1].mealId === null,
-    "6. Assigning meal to Day 0 updates Day 0 and leaves Day 1-6 empty"
+    userState.weeklyPlan.days[0].slots.lunch === chosenMeal.id &&
+      userState.weeklyPlan.days[1].slots.lunch === null,
+    "6. Assigning meal to Day 0 updates Day 0 lunch slot and leaves Day 1-6 empty"
   );
 
   // --- 7. 'Something spicy' Preference: Prioritizes Spicy Meals ---
@@ -169,32 +183,33 @@ function runEndToEndAudit() {
   );
 
   // --- 8. Plan Multi-Day Assignment ---
-  // Assign Day 1 to eba_egusi_soup, Day 2 to beans_porridge
+  // Assign Day 1 to eba_egusi_soup, Day 2 to ewa_riro
   userState.weeklyPlan.days[1].mealId = "eba_egusi_soup";
-  userState.weeklyPlan.days[2].mealId = "beans_porridge";
+  userState.weeklyPlan.days[1].slots.lunch = "eba_egusi_soup";
+  userState.weeklyPlan.days[2].mealId = "ewa_riro";
+  userState.weeklyPlan.days[2].slots.lunch = "ewa_riro";
   assert(
-    userState.weeklyPlan.days[0].mealId === chosenMeal.id &&
-      userState.weeklyPlan.days[1].mealId === "eba_egusi_soup" &&
-      userState.weeklyPlan.days[2].mealId === "beans_porridge" &&
-      userState.weeklyPlan.days[3].mealId === null,
-    "8. Multi-day plan maintains exactly 1 meal per day with slot isolation"
+    userState.weeklyPlan.days[0].slots.lunch === chosenMeal.id &&
+      userState.weeklyPlan.days[1].slots.lunch === "eba_egusi_soup" &&
+      userState.weeklyPlan.days[2].slots.lunch === "ewa_riro" &&
+      userState.weeklyPlan.days[3].slots.lunch === null,
+    "8. Multi-day plan maintains slot assignments with day isolation"
   );
 
   // --- 9. Plan Replacement Confirmation Logic ---
   const proposedMeal = MEAL_MAP["fried_rice"];
   // Simulating replacement on Day 0
-  const day0Previous = userState.weeklyPlan.days[0].mealId;
-  // User confirms replace
   userState.weeklyPlan.days[0].mealId = proposedMeal.id;
+  userState.weeklyPlan.days[0].slots.lunch = proposedMeal.id;
   assert(
-    userState.weeklyPlan.days[0].mealId === "fried_rice" &&
-      userState.weeklyPlan.days[1].mealId === "eba_egusi_soup" &&
-      userState.weeklyPlan.days[2].mealId === "beans_porridge",
+    userState.weeklyPlan.days[0].slots.lunch === "fried_rice" &&
+      userState.weeklyPlan.days[1].slots.lunch === "eba_egusi_soup" &&
+      userState.weeklyPlan.days[2].slots.lunch === "ewa_riro",
     "9. Confirming replacement updates Day 0 to fried_rice and preserves Day 1-6"
   );
 
   // --- 10. Grocery List Derivation ---
-  // Planned: fried_rice, eba_egusi_soup, beans_porridge
+  // Planned: fried_rice, eba_egusi_soup, ewa_riro
   // Available: rice, tomatoes, onion
   const groceryItems = generateGroceryList({
     weeklyPlan: userState.weeklyPlan,
@@ -242,9 +257,9 @@ function runEndToEndAudit() {
   const rehydrated = JSON.parse(serialized);
   assert(
     rehydrated.availableIngredientIds.length === 3 &&
-      rehydrated.weeklyPlan.days[0].mealId === "fried_rice" &&
-      rehydrated.weeklyPlan.days[1].mealId === "eba_egusi_soup" &&
-      rehydrated.weeklyPlan.days[2].mealId === "beans_porridge" &&
+      (rehydrated.weeklyPlan.days[0].slots?.lunch === "fried_rice" || rehydrated.weeklyPlan.days[0].mealId === "fried_rice") &&
+      (rehydrated.weeklyPlan.days[1].slots?.lunch === "eba_egusi_soup" || rehydrated.weeklyPlan.days[1].mealId === "eba_egusi_soup") &&
+      (rehydrated.weeklyPlan.days[2].slots?.lunch === "ewa_riro" || rehydrated.weeklyPlan.days[2].mealId === "ewa_riro") &&
       rehydrated.purchasedGroceryItemIds.includes("egusi"),
     "13. Complete user state survives JSON serialization / deserialization roundtrip"
   );

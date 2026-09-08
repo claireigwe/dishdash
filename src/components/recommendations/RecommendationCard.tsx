@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { MealRecommendation, MealPreference } from "@/types/meal";
+import { MealRecommendation, MealPreference, RecommendationRole } from "@/types/meal";
 import { INGREDIENT_MAP } from "@/data/ingredients";
 
 interface RecommendationCardProps {
@@ -9,45 +9,71 @@ interface RecommendationCardProps {
   rankIndex: number;
 }
 
+const ROLE_CONFIG: Record<
+  RecommendationRole,
+  { label: string; badgeClass: string; icon: string }
+> = {
+  best_match: {
+    label: "Best Match",
+    badgeClass: "rank-badge rank-badge-best",
+    icon: "★",
+  },
+  easiest: {
+    label: "Easiest Option",
+    badgeClass: "rank-badge rank-badge-easiest",
+    icon: "⚡",
+  },
+  wildcard: {
+    label: "Wildcard Choice",
+    badgeClass: "rank-badge rank-badge-wildcard",
+    icon: "✦",
+  },
+  another_good_match: {
+    label: "Good Match",
+    badgeClass: "rank-badge rank-badge-good",
+    icon: "✓",
+  },
+  another_option: {
+    label: "Another Option",
+    badgeClass: "rank-badge rank-badge-option",
+    icon: "✦",
+  },
+};
+
 export function RecommendationCard({
   recommendation,
   preference,
   rankIndex,
 }: RecommendationCardProps) {
-  const { meal, matchedIngredients, missingIngredients } = recommendation;
+  const { meal, matchedIngredients, missingIngredients, role, explanation } = recommendation;
   const hasMatched = matchedIngredients.length > 0;
 
-  // Derive plain-English explanation
-  const explanationParts: string[] = [];
+  const roleInfo = role
+    ? ROLE_CONFIG[role]
+    : {
+        label: `#${rankIndex + 1} Suggestion`,
+        badgeClass: "rank-badge",
+        icon: "#",
+      };
 
-  if (hasMatched) {
-    explanationParts.push(`Uses ${matchedIngredients.length} of your ingredients`);
-    if (missingIngredients.length > 0) {
-      explanationParts.push(`Needs ${missingIngredients.length} more`);
-    } else {
-      explanationParts.push("You have all ingredients!");
-    }
-  } else {
-    explanationParts.push("Suggested from our curated library");
-  }
-
-  if (preference === "quick" && meal.isQuick) {
-    explanationParts.push(`Ready in ${meal.cookingTime} mins`);
-  } else if (preference === "spicy") {
-    explanationParts.push("Spicy & flavor-packed");
-  } else if (preference === "filling") {
-    explanationParts.push("Hearty & filling");
-  } else if (preference === "sweet") {
-    explanationParts.push("Sweet & savory profile");
-  } else if (preference === "surprise") {
-    explanationParts.push("Curated Nigerian favorite");
-  }
+  // Explanation fallback if not provided directly
+  const displayExplanation =
+    explanation ||
+    (hasMatched
+      ? `Uses ${matchedIngredients.length} of your ingredients • ${
+          missingIngredients.length > 0
+            ? `Needs ${missingIngredients.length} more`
+            : "You have all ingredients!"
+        }`
+      : `Suggested from our curated library • Ready in ${meal.cookingTime} mins`);
 
   return (
     <article className="recommendation-card card" aria-labelledby={`meal-title-${meal.id}`}>
-      {/* Header with Rank & Badges */}
+      {/* Header with Role Badge & Attributes */}
       <div className="card-top-row">
-        <span className="rank-badge">#{rankIndex + 1} Suggestion</span>
+        <span className={roleInfo.badgeClass}>
+          {roleInfo.icon} {roleInfo.label}
+        </span>
         <div className="badge-group">
           <span className="badge badge-secondary">{meal.category}</span>
           <span className={`badge ${meal.isQuick ? "badge-primary" : "badge-neutral"}`}>
@@ -77,7 +103,7 @@ export function RecommendationCard({
         >
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        <span>{explanationParts.join(" • ")}</span>
+        <span>{displayExplanation}</span>
       </div>
 
       {/* Ingredient Match Breakdown */}

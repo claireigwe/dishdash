@@ -1,5 +1,5 @@
 import { UserState } from "../types/state";
-import { WeeklyPlan, DayPlan } from "../types/planner";
+import { WeeklyPlan, DayPlan, DailySlots } from "../types/planner";
 
 export const STORAGE_KEY = "dishdash_state_v1";
 export const STORAGE_VERSION = 1;
@@ -15,6 +15,94 @@ export function formatDate(date: Date): string {
 }
 
 /**
+ * Creates empty daily slots for breakfast, lunch, dinner, and snack.
+ */
+export function createEmptyDailySlots(): DailySlots {
+  return {
+    breakfast: null,
+    lunch: null,
+    dinner: null,
+    snack: null,
+  };
+}
+
+/**
+ * Normalizes daily slots with backward compatibility.
+ * Migration decision: Existing single-meal-per-day plans default to the "lunch" slot,
+ * preserving the meal while leaving breakfast, dinner, and snack open for scheduling.
+ */
+export function normalizeDaySlots(rawDay: any): DailySlots {
+  const empty = createEmptyDailySlots();
+  if (!rawDay || typeof rawDay !== "object") {
+    return empty;
+  }
+
+  // Case 1: Already has a slots object
+  if (rawDay.slots && typeof rawDay.slots === "object") {
+    return {
+      breakfast: typeof rawDay.slots.breakfast === "string" && rawDay.slots.breakfast.length > 0
+        ? rawDay.slots.breakfast
+        : null,
+      lunch: typeof rawDay.slots.lunch === "string" && rawDay.slots.lunch.length > 0
+        ? rawDay.slots.lunch
+        : null,
+      dinner: typeof rawDay.slots.dinner === "string" && rawDay.slots.dinner.length > 0
+        ? rawDay.slots.dinner
+        : null,
+      snack: typeof rawDay.slots.snack === "string" && rawDay.slots.snack.length > 0
+        ? rawDay.slots.snack
+        : null,
+    };
+  }
+
+  // Case 2: Legacy single meal plan with mealId -> migrate to lunch slot
+  if (typeof rawDay.mealId === "string" && rawDay.mealId.length > 0) {
+    return {
+      breakfast: null,
+      lunch: rawDay.mealId,
+      dinner: null,
+      snack: null,
+    };
+  }
+
+  return empty;
+}
+
+/**
+ * Normalizes or migrates a weekly plan ensuring exactly 7 days with 4 valid slots each.
+ */
+export function normalizeWeeklyPlan(rawPlan: any, referenceDate: Date = new Date()): WeeklyPlan {
+  const initial = getInitialWeeklyPlan(referenceDate);
+  if (!rawPlan || typeof rawPlan !== "object" || !Array.isArray(rawPlan.days)) {
+    return initial;
+  }
+
+  const days: DayPlan[] = [];
+  for (let i = 0; i < 7; i++) {
+    const rawDay = rawPlan.days.find((d: any) => d?.dayIndex === i) || rawPlan.days[i];
+    const initialDay = initial.days[i];
+    const slots = normalizeDaySlots(rawDay);
+
+    days.push({
+      dayIndex: i,
+      dateStr: typeof rawDay?.dateStr === "string" && rawDay.dateStr.length > 0
+        ? rawDay.dateStr
+        : initialDay.dateStr,
+      slots,
+      // Keep legacy mealId synced to lunch for any legacy consumers
+      mealId: slots.lunch,
+    });
+  }
+
+  return {
+    weekStartDate: typeof rawPlan.weekStartDate === "string" && rawPlan.weekStartDate.length > 0
+      ? rawPlan.weekStartDate
+      : initial.weekStartDate,
+    days,
+  };
+}
+
+/**
  * Generates an empty 7-day plan starting from the reference date.
  */
 export function getInitialWeeklyPlan(referenceDate: Date = new Date()): WeeklyPlan {
@@ -25,6 +113,7 @@ export function getInitialWeeklyPlan(referenceDate: Date = new Date()): WeeklyPl
     days.push({
       dayIndex: i,
       dateStr: formatDate(current),
+      slots: createEmptyDailySlots(),
       mealId: null,
     });
   }
@@ -71,7 +160,7 @@ export function loadUserState(): UserState {
       return getInitialUserState();
     }
 
-    // Validate minimum required fields
+    // Validate minimum required fields and normalize weekly plan
     return {
       availableIngredientIds: Array.isArray(parsed.availableIngredientIds)
         ? parsed.availableIngredientIds
@@ -79,10 +168,7 @@ export function loadUserState(): UserState {
       selectedPreference: VALID_PREFERENCES.has(parsed.selectedPreference)
         ? parsed.selectedPreference
         : "quick",
-      weeklyPlan:
-        parsed.weeklyPlan && Array.isArray(parsed.weeklyPlan.days)
-          ? parsed.weeklyPlan
-          : getInitialWeeklyPlan(),
+      weeklyPlan: normalizeWeeklyPlan(parsed.weeklyPlan),
       purchasedGroceryItemIds: Array.isArray(parsed.purchasedGroceryItemIds)
         ? parsed.purchasedGroceryItemIds
         : [],

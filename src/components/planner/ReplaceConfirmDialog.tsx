@@ -7,6 +7,7 @@ import { MEAL_MAP } from "@/data/meals";
 interface ReplaceConfirmDialogProps {
   isOpen: boolean;
   dayLabel: string;
+  slotName?: string;
   existingMealId: string;
   newMeal: Meal;
   onConfirm: () => void;
@@ -16,6 +17,7 @@ interface ReplaceConfirmDialogProps {
 export function ReplaceConfirmDialog({
   isOpen,
   dayLabel,
+  slotName,
   existingMealId,
   newMeal,
   onConfirm,
@@ -24,6 +26,7 @@ export function ReplaceConfirmDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const existingMeal = MEAL_MAP[existingMealId];
   const existingMealName = existingMeal ? existingMeal.name : "another meal";
+  const targetName = slotName ? `${dayLabel} ${slotName}` : dayLabel;
 
   // Handle escape key
   useEffect(() => {
@@ -75,13 +78,13 @@ export function ReplaceConfirmDialog({
             </svg>
           </div>
           <h2 id="replace-dialog-title" className="replace-dialog-title">
-            Replace Planned Meal?
+            Replace {targetName}?
           </h2>
         </div>
 
         <div id="replace-dialog-desc" className="replace-dialog-body">
           <p className="replace-prompt">
-            <strong>{dayLabel}</strong> is currently scheduled for:
+            <strong>{targetName}</strong> is currently scheduled for:
           </p>
           <div className="current-planned-meal-box">
             <span className="current-meal-name">{existingMealName}</span>

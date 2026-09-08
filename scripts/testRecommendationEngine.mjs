@@ -24,7 +24,6 @@ const ingJs = loadAndTranspileTs("src/data/ingredients.ts");
 const mealJs = loadAndTranspileTs("src/data/meals.ts");
 const engineJs = loadAndTranspileTs("src/lib/recommendationEngine.ts");
 
-const moduleExports = {};
 const customRequire = (moduleName) => {
   if (moduleName.includes("ingredients")) {
     const exp = {};
@@ -41,16 +40,29 @@ const customRequire = (moduleName) => {
 
 const engineExp = {};
 new Function("exports", "require", engineJs)(engineExp, customRequire);
-const { getRecommendations } = engineExp;
+const {
+  getRecommendations,
+  calculatePreferenceScore,
+  calculateCoverageScore,
+  calculateMissingScore,
+  calculateTimeEffortScore,
+  calculateVarietyScore,
+  scoreMeal,
+  PREFERENCE_WEIGHT,
+  INGREDIENT_COVERAGE_WEIGHT,
+  MISSING_INGREDIENTS_WEIGHT,
+  TIME_EFFORT_WEIGHT,
+  VARIETY_WEIGHT,
+} = engineExp;
 
 const mealsExp = {};
 new Function("exports", "require", mealJs)(mealsExp, customRequire);
-const { MEALS } = mealsExp;
+const { MEALS, MEAL_MAP } = mealsExp;
 
 function runTests() {
-  console.log("=========================================");
-  console.log(" DishDash Recommendation Engine Unit Tests");
-  console.log("=========================================");
+  console.log("=================================================");
+  console.log(" DishDash Recommendation Engine V2 Unit Tests     ");
+  console.log("=================================================");
 
   let passed = 0;
   let failed = 0;
@@ -65,209 +77,340 @@ function runTests() {
     }
   }
 
-  // 1. No ingredients + Surprise me -> Returns top 3 meals
-  const test1 = getRecommendations({ selectedIngredientIds: [], preference: "surprise" });
+  // -------------------------------------------------------------
+  // Test 1: Tunable Weights verification
+  // -------------------------------------------------------------
+  const weightSum =
+    PREFERENCE_WEIGHT +
+    INGREDIENT_COVERAGE_WEIGHT +
+    MISSING_INGREDIENTS_WEIGHT +
+    TIME_EFFORT_WEIGHT +
+    VARIETY_WEIGHT;
   assert(
-    test1.length === 3 &&
-      test1[0].meal.id === MEALS[0].id &&
-      test1[1].meal.id === MEALS[1].id &&
-      test1[2].meal.id === MEALS[2].id &&
-      test1[0].matchedIngredients.length === 0,
-    "1. No ingredients + Surprise me returns first 3 static meals with 0 matches"
+    Math.abs(weightSum - 1.0) < 0.001 &&
+      PREFERENCE_WEIGHT === 0.35 &&
+      INGREDIENT_COVERAGE_WEIGHT === 0.30 &&
+      MISSING_INGREDIENTS_WEIGHT === 0.15 &&
+      TIME_EFFORT_WEIGHT === 0.10 &&
+      VARIETY_WEIGHT === 0.10,
+    "1. Tunable weights exist and sum exactly to 1.0 (35% / 30% / 15% / 10% / 10%)"
   );
 
-  // 2. No ingredients + Something quick -> Prioritizes fast meals (<= 30 mins)
-  const test2 = getRecommendations({ selectedIngredientIds: [], preference: "quick" });
+  // -------------------------------------------------------------
+  // Test 2: Ingredient Coverage in Isolation (Proportional)
+  // Meal A: 4/5 (80% coverage) vs Meal B: 5/10 (50% coverage)
+  // -------------------------------------------------------------
+  const coverageA = calculateCoverageScore(4, 5, true);
+  const coverageB = calculateCoverageScore(5, 10, true);
   assert(
-    test2.length === 3 &&
-      test2.every((r) => r.meal.cookingTime <= 30) &&
-      test2[0].meal.cookingTime <= test2[1].meal.cookingTime,
-    "2. No ingredients + Something quick returns top 3 quick meals"
+    coverageA === 80 && coverageB === 50 && coverageA > coverageB,
+    "2. Proportional ingredient coverage in isolation: 4/5 (80%) scores higher than 5/10 (50%)"
   );
 
-  // 3. No ingredients + Something spicy -> Prioritizes spicy meals
-  const test3 = getRecommendations({ selectedIngredientIds: [], preference: "spicy" });
+  // -------------------------------------------------------------
+  // Test 3: Missing Ingredients Score in Isolation
+  // When coverage is equal, fewer missing ingredients receives higher score
+  // -------------------------------------------------------------
+  const missingScoreFew = calculateMissingScore(1, true);
+  const missingScoreMany = calculateMissingScore(5, true);
   assert(
-    test3.length === 3 &&
-      test3.some((r) => r.meal.categoryTags.includes("spicy") || r.meal.ingredients.includes("scotch_bonnet")),
-    "3. No ingredients + Something spicy returns top spicy favorites"
+    missingScoreFew > missingScoreMany && missingScoreFew === 88 && missingScoreMany === 40,
+    "3. Missing ingredients score in isolation: 1 missing (88) scores higher than 5 missing (40)"
   );
 
-  // 4. No ingredients + Something filling -> Prioritizes hearty swallows & beans
-  const test4 = getRecommendations({ selectedIngredientIds: [], preference: "filling" });
-  assert(
-    test4.length === 3 &&
-      test4.some((r) => r.meal.category === "Swallows" || r.meal.category === "Beans & Legumes"),
-    "4. No ingredients + Something filling returns top hearty swallows and beans"
-  );
+  // -------------------------------------------------------------
+  // Test 4: End-to-end Isolation with Synthetic Library
+  // When all other factors are identical, higher proportional coverage yields higher total score
+  // -------------------------------------------------------------
+  const baseMealMock = {
+    category: "Rice dishes",
+    cookingTime: 30,
+    isQuick: true,
+    categoryTags: [],
+    instructions: [],
+    difficulty: "easy",
+    spiciness: "mild",
+    fillingLevel: "medium",
+    sweetness: "none",
+    mealType: "main",
+    primaryProtein: "none",
+  };
 
-  // 5. No ingredients + Something sweet -> Prioritizes sweet plantain & coconut meals
-  const test5 = getRecommendations({ selectedIngredientIds: [], preference: "sweet" });
-  assert(
-    test5.length === 3 &&
-      test5.every((r) => r.meal.ingredients.includes("plantain") || r.meal.ingredients.includes("coconut_milk")),
-    "5. No ingredients + Something sweet returns plantain and coconut meals"
-  );
+  const syntheticMealA = {
+    ...baseMealMock,
+    id: "meal_a_high_cov",
+    name: "Meal A High Coverage",
+    description: "4 of 5 ingredients",
+    ingredients: ["i1", "i2", "i3", "i4", "extra1"],
+  };
 
-  // 6. One matching ingredient (e.g. "egusi")
-  const test6 = getRecommendations({ selectedIngredientIds: ["egusi"], preference: "surprise" });
-  assert(
-    test6.length === 1 &&
-      test6[0].meal.id === "eba_egusi_soup" &&
-      test6[0].matchedIngredients.includes("egusi") &&
-      test6[0].missingIngredients.includes("beef"),
-    "6. One matching ingredient ('egusi') returns exactly the meal containing egusi with matching & missing details"
-  );
+  const syntheticMealB = {
+    ...baseMealMock,
+    id: "meal_b_low_cov",
+    name: "Meal B Low Coverage",
+    description: "5 of 10 ingredients",
+    ingredients: ["i1", "i2", "i3", "i4", "i5", "m1", "m2", "m3", "m4", "m5"],
+  };
 
-  // 7. Multiple matching ingredients (e.g. rice, tomato, onion)
-  const test7 = getRecommendations({
-    selectedIngredientIds: ["rice", "tomatoes", "onion", "tomato_paste", "bell_pepper"],
-    preference: "surprise",
+  const userSelected = ["i1", "i2", "i3", "i4", "i5"];
+  const syntheticRecs = getRecommendations({
+    selectedIngredientIds: userSelected,
+    preference: "quick",
+    mealLibrary: [syntheticMealB, syntheticMealA],
   });
+
   assert(
-    test7.length === 3 &&
-      test7[0].matchedIngredients.length >= test7[1].matchedIngredients.length &&
-      test7[1].matchedIngredients.length >= test7[2].matchedIngredients.length,
-    "7. Multiple matching ingredients correctly ranks meals descending by match count"
+    syntheticRecs.length === 2 &&
+      syntheticRecs[0].meal.id === "meal_a_high_cov" &&
+      syntheticRecs[0].scoreBreakdown.coverageScore === 80 &&
+      syntheticRecs[1].scoreBreakdown.coverageScore === 50,
+    "4. End-to-end: Meal with higher proportional coverage (80%) outranks lower coverage (50%)"
   );
 
-  // 8. Preference influence: When Something quick is selected, faster meals rank higher on tied matches
+  // -------------------------------------------------------------
+  // Test 5: Preference Fit across all 5 Moods in Isolation
+  // -------------------------------------------------------------
+  const spicyMeal = { ...baseMealMock, id: "spicy_m", name: "S", spiciness: "high" };
+  const mildMeal = { ...baseMealMock, id: "mild_m", name: "M", spiciness: "none" };
+  assert(
+    calculatePreferenceScore(spicyMeal, "spicy") === 100 &&
+      calculatePreferenceScore(mildMeal, "spicy") === 0,
+    "5a. 'Something spicy' preference gives highest score to high spiciness"
+  );
+
+  const quickMeal = { ...baseMealMock, id: "q_m", name: "Q", cookingTime: 15 };
+  const slowMeal = { ...baseMealMock, id: "s_m", name: "S", cookingTime: 55 };
+  assert(
+    calculatePreferenceScore(quickMeal, "quick") === 100 &&
+      calculatePreferenceScore(slowMeal, "quick") === 15,
+    "5b. 'Something quick' preference gives highest score to <=20m meals and penalizes >45m"
+  );
+
+  const heavyMeal = { ...baseMealMock, id: "h_m", name: "H", fillingLevel: "heavy" };
+  const lightMeal = { ...baseMealMock, id: "l_m", name: "L", fillingLevel: "light" };
+  assert(
+    calculatePreferenceScore(heavyMeal, "filling") === 100 &&
+      calculatePreferenceScore(lightMeal, "filling") === 30,
+    "5c. 'Something filling' preference prioritizes heavy meals"
+  );
+
+  const sweetMeal = { ...baseMealMock, id: "sw_m", name: "SW", sweetness: "sweet" };
+  const nonSweetMeal = { ...baseMealMock, id: "nsw_m", name: "NSW", sweetness: "none" };
+  assert(
+    calculatePreferenceScore(sweetMeal, "sweet") === 100 &&
+      calculatePreferenceScore(nonSweetMeal, "sweet") === 10,
+    "5d. 'Something sweet' preference prioritizes sweet meals"
+  );
+
+  // -------------------------------------------------------------
+  // Test 6: Cooking Time & Difficulty (Practicality) in Isolation
+  // -------------------------------------------------------------
+  const easyFast = { ...baseMealMock, id: "ef", name: "EF", cookingTime: 15, difficulty: "easy" };
+  const hardSlow = { ...baseMealMock, id: "hs", name: "HS", cookingTime: 55, difficulty: "hard" };
+  const practicalScoreFast = calculateTimeEffortScore(easyFast);
+  const practicalScoreSlow = calculateTimeEffortScore(hardSlow);
+  assert(
+    practicalScoreFast > practicalScoreSlow && practicalScoreFast >= 85 && practicalScoreSlow <= 45,
+    "6. Practicality effort score rewards fast, easy meals over long, hard meals"
+  );
+
+  // -------------------------------------------------------------
+  // Test 7: Weekly Variety Penalty in Isolation (Single & Multi-slot)
+  // -------------------------------------------------------------
+  const samplePlan = {
+    days: [
+      { dayIndex: 0, mealId: "jollof_rice" },
+      { dayIndex: 1, mealId: "chicken_pepper_soup" },
+    ],
+  };
+
+  const duplicateMeal = MEAL_MAP["jollof_rice"];
+  const sameProteinMeal = MEAL_MAP["curry_chicken_rice"]; // shares 'chicken' and 'Rice dishes'
+  const freshMeal = MEAL_MAP["ewa_riro"]; // 'Beans & Legumes' + 'beans' (completely fresh)
+
+  const varScoreDup = calculateVarietyScore(duplicateMeal, samplePlan);
+  const varScoreSameProt = calculateVarietyScore(sameProteinMeal, samplePlan);
+  const varScoreFresh = calculateVarietyScore(freshMeal, samplePlan);
+
+  // Multi-slot plan variety test: Dinner has 'jollof_rice', Breakfast has 'curry_chicken_rice'
+  const multiSlotPlan = {
+    days: [
+      {
+        dayIndex: 0,
+        slots: {
+          breakfast: "indomie_noodle_sandwich",
+          lunch: "ewa_riro",
+          dinner: "jollof_rice",
+          snack: "nigerian_egg_roll",
+        },
+      },
+    ],
+  };
+  const multiVarDup = calculateVarietyScore(duplicateMeal, multiSlotPlan);
+
+  assert(
+    varScoreDup <= 20 &&
+      multiVarDup <= 20 &&
+      varScoreSameProt < varScoreFresh &&
+      varScoreFresh === 100,
+    "7. Weekly variety properly penalizes exact duplicates and same protein across all 4 daily meal slots while rewarding fresh dishes"
+  );
+
+  // -------------------------------------------------------------
+  // Test 8: Five Distinct Roles Generated (Best Match, Easiest Option, Wildcard, Good Match, Another Option)
+  // -------------------------------------------------------------
   const test8 = getRecommendations({
-    selectedIngredientIds: ["eggs", "tomatoes", "onion"],
+    selectedIngredientIds: ["rice", "tomatoes", "onion", "vegetable_oil", "scotch_bonnet"],
     preference: "quick",
   });
+
+  const uniqueMealIds = new Set(test8.map((r) => r.meal.id));
+
   assert(
-    test8.length > 0 &&
-      test8[0].meal.cookingTime <= 25,
-    "8. Something quick preference prioritizes faster meals among matching candidates"
+    test8.length === 5 &&
+      uniqueMealIds.size === 5 &&
+      test8[0].role === "best_match" &&
+      test8[1].role === "easiest" &&
+      test8[2].role === "wildcard" &&
+      test8[3].role === "another_good_match" &&
+      test8[4].role === "another_option",
+    "8. Recommendations assign up to 5 distinct roles with 0 duplicates (best_match, easiest, wildcard, another_good_match, another_option)"
   );
 
-  // 9. Preference influence: When Something sweet is selected, plantain meals rank higher
-  const test9 = getRecommendations({
-    selectedIngredientIds: ["eggs", "onion", "vegetable_oil"],
-    preference: "sweet",
-  });
+  // -------------------------------------------------------------
+  // Test 9: Wildcard & Diversity Guarantee across Recommendations
+  // Wildcard is a genuine match satisfying intent while providing category/protein diversity
+  // -------------------------------------------------------------
+  const bestMatchMeal = test8[0].meal;
+  const easiestMeal = test8[1].meal;
+  const wildcardMeal = test8[2].meal;
+
   assert(
-    test9.length > 0 &&
-      test9[0].meal.ingredients.includes("plantain"),
-    "9. Something sweet preference prioritizes plantain meals"
+    test8[2].matchedIngredients.length > 0 &&
+      test8[2].scoreBreakdown.preferenceScore >= 40 &&
+      (wildcardMeal.category !== bestMatchMeal.category ||
+        wildcardMeal.primaryProtein !== bestMatchMeal.primaryProtein),
+    "9. Wildcard is relevant (matched ingredients, good preference fit) while providing category/protein variety"
   );
 
-  // 10. Preference influence: When Something spicy is selected, spicy dishes rank higher
+  // -------------------------------------------------------------
+  // Test 10: Zero Selected Ingredients Handles Gracefully (returns up to 5)
+  // -------------------------------------------------------------
   const test10 = getRecommendations({
-    selectedIngredientIds: ["palm_oil", "onion", "scotch_bonnet", "crayfish"],
-    preference: "spicy",
+    selectedIngredientIds: [],
+    preference: "quick",
   });
+
+  const zeroSet = new Set(test10.map((r) => r.meal.id));
+
   assert(
-    test10.length > 0 &&
-      (test10[0].meal.categoryTags.includes("spicy") || test10[0].meal.ingredients.includes("scotch_bonnet")),
-    "10. Something spicy preference prioritizes spicy dishes"
+    test10.length === 5 &&
+      zeroSet.size === 5 &&
+      test10[0].matchedIngredients.length === 0 &&
+      test10.every((r) => r.meal.cookingTime <= 30) &&
+      test10[0].explanation.includes("Top match • Fits your quick mood"),
+    "10. Zero selected ingredients recommends 5 top preference-matched meals without claiming false matches"
   );
 
-  // 11. No matching meals
-  const dummyMealLib = [
-    {
-      id: "m1",
-      name: "M1",
-      description: "D",
-      category: "Rice dishes",
-      cookingTime: 20,
-      isQuick: true,
-      categoryTags: [],
-      ingredients: ["rice", "onion"],
-      instructions: ["Step 1"],
-    },
-  ];
+  // -------------------------------------------------------------
+  // Test 11: No Matching Meals returns empty list
+  // -------------------------------------------------------------
   const test11 = getRecommendations({
     selectedIngredientIds: ["yam"],
-    preference: "surprise",
-    mealLibrary: dummyMealLib,
+    preference: "quick",
+    mealLibrary: [
+      {
+        ...baseMealMock,
+        id: "rice_only",
+        name: "Rice Only",
+        description: "",
+        ingredients: ["rice", "tomatoes"],
+      },
+    ],
   });
+
   assert(test11.length === 0, "11. No matching meals returns empty array (triggers NoMatchState)");
 
-  // 12. Only one valid recommendation exists
-  const test12 = getRecommendations({
-    selectedIngredientIds: ["semovita"],
-    preference: "surprise",
-  });
-  assert(test12.length === 1 && test12[0].meal.id === "semo_vegetable_soup", "12. Only 1 valid recommendation returns array of length 1");
-
-  // 13. Only two valid recommendations exist
-  const test13 = getRecommendations({
-    selectedIngredientIds: ["spaghetti", "instant_noodles"],
-    preference: "surprise",
-  });
-  assert(
-    test13.length === 2 &&
-      test13.map((r) => r.meal.id).sort().join(",") === "noodles_egg,spaghetti_jollof",
-    "13. Only 2 valid recommendations returns exactly 2 without filler or duplicates"
-  );
-
-  // 14. More than three valid recommendations exist -> capped at exactly 3
-  const test14 = getRecommendations({
-    selectedIngredientIds: ["onion", "salt", "bouillon_cubes", "scotch_bonnet"],
-    preference: "surprise",
-  });
-  assert(test14.length === 3, "14. More than 3 valid recommendations returns capped array of exactly 3");
-
-  // 15. Equal ingredient matches and equal preference score preserve static dataset order
-  const tiedMeals = [
-    { id: "meal_a", name: "A", description: "D", category: "Yam & Plantain", cookingTime: 20, isQuick: true, categoryTags: [], ingredients: ["yam"], instructions: [] },
-    { id: "meal_b", name: "B", description: "D", category: "Yam & Plantain", cookingTime: 20, isQuick: true, categoryTags: [], ingredients: ["yam"], instructions: [] },
-    { id: "meal_c", name: "C", description: "D", category: "Yam & Plantain", cookingTime: 20, isQuick: true, categoryTags: [], ingredients: ["yam"], instructions: [] },
-  ];
-  const test15 = getRecommendations({
-    selectedIngredientIds: ["yam"],
-    preference: "surprise",
-    mealLibrary: tiedMeals,
-  });
-  assert(
-    test15[0].meal.id === "meal_a" &&
-      test15[1].meal.id === "meal_b" &&
-      test15[2].meal.id === "meal_c",
-    "15. Equal ingredient matches and equal scores preserve static dataset order"
-  );
-
-  // 16. Same input always produces the same result (Determinism)
-  const inputSample = {
-    selectedIngredientIds: ["plantain", "eggs", "tomatoes"],
-    preference: "quick",
+  // -------------------------------------------------------------
+  // Test 12: Determinism Guarantee
+  // -------------------------------------------------------------
+  const inputForDet = {
+    selectedIngredientIds: ["plantain", "eggs", "tomatoes", "onion"],
+    preference: "sweet",
   };
-  const runA = getRecommendations(inputSample);
-  const runB = getRecommendations(inputSample);
+  const run1 = getRecommendations(inputForDet);
+  const run2 = getRecommendations(inputForDet);
   assert(
-    JSON.stringify(runA) === JSON.stringify(runB),
-    "16. Same inputs produce 100% deterministic identical output"
+    JSON.stringify(run1) === JSON.stringify(run2),
+    "12. Engine is 100% deterministic (identical inputs produce identical outputs)"
   );
 
-  // 17. Selected ingredients are correctly partitioned into matching and missing
-  const test17 = getRecommendations({
-    selectedIngredientIds: ["plantain", "eggs"],
+  // -------------------------------------------------------------
+  // Test 13: Truthful Explanations reflect actual metrics
+  // -------------------------------------------------------------
+  const test13 = getRecommendations({
+    selectedIngredientIds: ["spaghetti", "tomatoes", "bell_pepper", "scotch_bonnet", "onion"],
+    preference: "quick",
+  });
+
+  const topRec = test13[0];
+  assert(
+    topRec.explanation.includes(`Uses ${topRec.matchedIngredients.length} of ${topRec.meal.ingredients.length} ingredients`) &&
+      topRec.explanation.includes(`${topRec.meal.cookingTime} mins`),
+    "13. Recommendation explanations truthfully state exact ingredient counts and cooking time"
+  );
+
+  // -------------------------------------------------------------
+  // Test 14: Single Valid Match returns 1 result
+  // -------------------------------------------------------------
+  const test14 = getRecommendations({
+    selectedIngredientIds: ["corned_beef"],
     preference: "surprise",
   });
-  const plantainEggMeal = test17.find((r) => r.meal.id === "fried_plantain_egg");
   assert(
-    plantainEggMeal &&
-      plantainEggMeal.matchedIngredients.includes("plantain") &&
-      plantainEggMeal.matchedIngredients.includes("eggs") &&
-      plantainEggMeal.missingIngredients.includes("vegetable_oil"),
-    "17. Ingredients are correctly partitioned into matching and missing lists"
+    test14.length === 1 && test14[0].meal.id === "corned_beef_spaghetti" && test14[0].role === "best_match",
+    "14. Single valid match returns exactly 1 result with 'best_match' role"
   );
 
-  // 18. Something filling preference prioritizes hearty swallows on shared ingredients
-  const test18 = getRecommendations({
-    selectedIngredientIds: ["garri", "palm_oil", "onion", "crayfish"],
-    preference: "filling",
+  // -------------------------------------------------------------
+  // Test 15: Exactly 2 Valid Matches returns 2 results
+  // -------------------------------------------------------------
+  const test15 = getRecommendations({
+    selectedIngredientIds: ["banga_extract"],
+    preference: "surprise",
   });
   assert(
-    test18.length > 0 &&
-      test18[0].meal.category === "Swallows",
-    "18. Something filling preference prioritizes hearty swallows"
+    test15.length === 2 &&
+      test15[0].role === "best_match" &&
+      test15[1].role === "easiest",
+    "15. Exactly 2 valid matches returns 2 results with 'best_match' and 'easiest' roles"
   );
 
-  console.log("-----------------------------------------");
+  // -------------------------------------------------------------
+  // Test 16: Synthetic 4-candidate Library returns exactly 4 results
+  // -------------------------------------------------------------
+  const test16 = getRecommendations({
+    selectedIngredientIds: ["i1"],
+    preference: "quick",
+    mealLibrary: [
+      { ...baseMealMock, id: "m1", name: "M1", ingredients: ["i1"] },
+      { ...baseMealMock, id: "m2", name: "M2", ingredients: ["i1"] },
+      { ...baseMealMock, id: "m3", name: "M3", ingredients: ["i1"] },
+      { ...baseMealMock, id: "m4", name: "M4", ingredients: ["i1"] },
+    ],
+  });
+  assert(
+    test16.length === 4 &&
+      test16[0].role === "best_match" &&
+      test16[1].role === "easiest" &&
+      test16[2].role === "wildcard" &&
+      test16[3].role === "another_good_match",
+    "16. Insufficient candidates (4) returns exactly 4 recommendations with appropriate roles"
+  );
+
+  console.log("-------------------------------------------------");
   console.log(`Unit Tests Summary: ${passed} Passed, ${failed} Failed.`);
-  console.log("=========================================");
+  console.log("=================================================");
   return failed === 0;
 }
 
@@ -275,4 +418,3 @@ const allPassed = runTests();
 if (!allPassed) {
   process.exit(1);
 }
-

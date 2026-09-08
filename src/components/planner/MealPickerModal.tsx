@@ -4,9 +4,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Meal } from "@/types/meal";
 import { MEALS } from "@/data/meals";
 
+import { MealSlot } from "@/types/planner";
+
 interface MealPickerModalProps {
   isOpen: boolean;
   dayIndex: number;
+  slot?: MealSlot;
   dayLabel: string;
   onSelectMeal: (meal: Meal) => void;
   onClose: () => void;
@@ -14,6 +17,7 @@ interface MealPickerModalProps {
 
 export function MealPickerModal({
   isOpen,
+  slot = "lunch",
   dayLabel,
   onSelectMeal,
   onClose,
@@ -35,14 +39,44 @@ export function MealPickerModal({
   }, [isOpen, onClose]);
 
   const filteredMeals = useMemo(() => {
-    if (!searchTerm.trim()) return MEALS;
-    const term = searchTerm.toLowerCase().trim();
-    return MEALS.filter(
-      (m) =>
-        m.name.toLowerCase().includes(term) ||
-        m.category.toLowerCase().includes(term)
-    );
-  }, [searchTerm]);
+    let list = MEALS;
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      list = MEALS.filter(
+        (m) =>
+          m.name.toLowerCase().includes(term) ||
+          m.category.toLowerCase().includes(term) ||
+          m.mealType.toLowerCase().includes(term)
+      );
+    }
+
+    // Sort to surface slot-appropriate meals prominently if no search term active
+    if (!searchTerm.trim()) {
+      return [...list].sort((a, b) => {
+        let scoreA = 0;
+        let scoreB = 0;
+
+        if (slot === "breakfast") {
+          if (a.mealType === "breakfast") scoreA += 50;
+          if (b.mealType === "breakfast") scoreB += 50;
+          if (a.isQuick) scoreA += 10;
+          if (b.isQuick) scoreB += 10;
+        } else if (slot === "snack") {
+          if (a.mealType === "snack" || a.mealType === "street_food") scoreA += 50;
+          if (b.mealType === "snack" || b.mealType === "street_food") scoreB += 50;
+        } else {
+          // lunch or dinner
+          if (a.mealType === "main" || a.mealType === "soup") scoreA += 20;
+          if (b.mealType === "main" || b.mealType === "soup") scoreB += 20;
+        }
+
+        return scoreB - scoreA;
+      });
+    }
+
+    return list;
+  }, [searchTerm, slot]);
 
   if (!isOpen) return null;
 
@@ -67,7 +101,7 @@ export function MealPickerModal({
               Choose a Meal
             </h2>
             <p className="modal-subtitle">
-              For <strong>{dayLabel}</strong>
+              For <strong>{dayLabel}</strong> • <span style={{ textTransform: "capitalize" }}>{slot}</span>
             </p>
           </div>
           <button

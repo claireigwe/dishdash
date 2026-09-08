@@ -28,12 +28,24 @@ export function generateGroceryList(input: GroceryGeneratorInput): GroceryItem[]
     return [];
   }
 
-  // 1. Collect all valid planned meal IDs
-  const plannedMealIds = weeklyPlan.days
-    .map((day) => day.mealId)
-    .filter((id): id is string => typeof id === "string" && id.length > 0);
+  // 1. Collect all valid planned meals across all 7 days and 4 slots
+  const plannedMealEntries: { mealId: string; dayIndex: number; slot?: string }[] = [];
 
-  if (plannedMealIds.length === 0) {
+  for (const day of weeklyPlan.days) {
+    if (day.slots && typeof day.slots === "object") {
+      const slots = ["breakfast", "lunch", "dinner", "snack"] as const;
+      for (const slot of slots) {
+        const id = day.slots[slot];
+        if (typeof id === "string" && id.length > 0) {
+          plannedMealEntries.push({ mealId: id, dayIndex: day.dayIndex, slot });
+        }
+      }
+    } else if (typeof day.mealId === "string" && day.mealId.length > 0) {
+      plannedMealEntries.push({ mealId: day.mealId, dayIndex: day.dayIndex, slot: "lunch" });
+    }
+  }
+
+  if (plannedMealEntries.length === 0) {
     return [];
   }
 
@@ -49,8 +61,8 @@ export function generateGroceryList(input: GroceryGeneratorInput): GroceryItem[]
     { mealIds: Set<string>; mealNames: Set<string> }
   >();
 
-  for (const mealId of plannedMealIds) {
-    const meal = mealLookup[mealId];
+  for (const entryItem of plannedMealEntries) {
+    const meal = mealLookup[entryItem.mealId];
     // Gracefully ignore non-existent / invalid meal references
     if (!meal || !Array.isArray(meal.ingredients)) {
       continue;

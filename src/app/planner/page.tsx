@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useUserState } from "@/hooks/useUserState";
 import { Meal } from "@/types/meal";
+import { MealSlot, MEAL_SLOTS } from "@/types/planner";
 import { DaySlotCard, formatPlannerDayLabel } from "@/components/planner/DaySlotCard";
 import { MealPickerModal } from "@/components/planner/MealPickerModal";
 import { ReplaceConfirmDialog } from "@/components/planner/ReplaceConfirmDialog";
@@ -11,18 +12,23 @@ import { ReplaceConfirmDialog } from "@/components/planner/ReplaceConfirmDialog"
 export default function WeeklyPlannerPage() {
   const {
     weeklyPlan,
-    assignMealToDay,
-    removeMealFromDay,
+    assignMealToSlot,
+    removeMealFromSlot,
     isLoaded,
   } = useUserState();
 
   // State for Meal Picker modal
-  const [pickerTargetDayIndex, setPickerTargetDayIndex] = useState<number | null>(null);
+  const [pickerTarget, setPickerTarget] = useState<{
+    dayIndex: number;
+    slot: MealSlot;
+  } | null>(null);
 
   // State for Replacement confirmation
   const [replaceTarget, setReplaceTarget] = useState<{
     dayIndex: number;
+    slot: MealSlot;
     dayLabel: string;
+    slotLabel: string;
     existingMealId: string;
     newMeal: Meal;
   } | null>(null);
@@ -34,48 +40,73 @@ export default function WeeklyPlannerPage() {
     return Array.from({ length: 7 }, (_, i) => ({
       dayIndex: i,
       dateStr: "",
+      slots: {
+        breakfast: null,
+        lunch: null,
+        dinner: null,
+        snack: null,
+      },
       mealId: null,
     }));
   }, [weeklyPlan]);
 
   const plannedCount = useMemo(() => {
-    return days.filter((d) => typeof d.mealId === "string" && d.mealId.length > 0).length;
+    let count = 0;
+    for (const d of days) {
+      if (d.slots) {
+        for (const s of MEAL_SLOTS) {
+          if (d.slots[s]) count++;
+        }
+      } else if (d.mealId) {
+        count++;
+      }
+    }
+    return count;
   }, [days]);
 
-  // Handle click on "Add Meal" or "Replace" from a Day Slot
-  const handleOpenPicker = (dayIndex: number) => {
-    setPickerTargetDayIndex(dayIndex);
+  // Handle click on "Add Meal" or "Replace" from a specific meal slot
+  const handleOpenPicker = (dayIndex: number, slot: MealSlot) => {
+    setPickerTarget({ dayIndex, slot });
   };
 
   // Handle meal selected from picker
   const handleSelectMealFromPicker = (selectedMeal: Meal) => {
-    if (pickerTargetDayIndex === null) return;
+    if (!pickerTarget) return;
 
-    const targetDay = days.find((d) => d.dayIndex === pickerTargetDayIndex);
+    const { dayIndex, slot } = pickerTarget;
+    const targetDay = days.find((d) => d.dayIndex === dayIndex);
     if (!targetDay) return;
 
     const { dayName } = formatPlannerDayLabel(targetDay);
+    const slotLabel = slot.charAt(0).toUpperCase() + slot.slice(1);
+    const existingMealId = targetDay.slots
+      ? targetDay.slots[slot]
+      : slot === "lunch"
+      ? targetDay.mealId
+      : null;
 
-    if (targetDay.mealId && targetDay.mealId !== selectedMeal.id) {
-      // Occupied by another meal: prompt confirmation
+    if (existingMealId && existingMealId !== selectedMeal.id) {
+      // Occupied slot: prompt replacement confirmation for this specific slot
       setReplaceTarget({
-        dayIndex: targetDay.dayIndex,
+        dayIndex,
+        slot,
         dayLabel: dayName,
-        existingMealId: targetDay.mealId,
+        slotLabel,
+        existingMealId,
         newMeal: selectedMeal,
       });
-      setPickerTargetDayIndex(null);
+      setPickerTarget(null);
     } else {
       // Empty or re-assigning same meal: assign immediately
-      assignMealToDay(targetDay.dayIndex, selectedMeal.id);
-      setPickerTargetDayIndex(null);
+      assignMealToSlot(dayIndex, slot, selectedMeal.id);
+      setPickerTarget(null);
     }
   };
 
   // Handle replacement confirmation
   const handleConfirmReplace = () => {
     if (replaceTarget) {
-      assignMealToDay(replaceTarget.dayIndex, replaceTarget.newMeal.id);
+      assignMealToSlot(replaceTarget.dayIndex, replaceTarget.slot, replaceTarget.newMeal.id);
       setReplaceTarget(null);
     }
   };
@@ -93,8 +124,8 @@ export default function WeeklyPlannerPage() {
   }
 
   const activePickerDay =
-    pickerTargetDayIndex !== null
-      ? days.find((d) => d.dayIndex === pickerTargetDayIndex)
+    pickerTarget !== null
+      ? days.find((d) => d.dayIndex === pickerTarget.dayIndex)
       : null;
 
   const activePickerDayLabel = activePickerDay
@@ -108,11 +139,11 @@ export default function WeeklyPlannerPage() {
         <div className="planner-header-top">
           <h1 className="planner-title">Your Week</h1>
           <span className="results-count-badge">
-            {plannedCount} of 7 Days Planned
+            {plannedCount} of 28 Slots Planned
           </span>
         </div>
         <p className="planner-subtitle">
-          Plan one meal for each day of the week.
+          Plan breakfast, lunch, dinner, and snacks for each day of the week.
         </p>
       </header>
 
@@ -122,7 +153,7 @@ export default function WeeklyPlannerPage() {
           <div className="banner-content">
             <h2 className="banner-title">No meals planned yet</h2>
             <p className="banner-desc">
-              Schedule meals for the week day-by-day below, or discover tailored suggestions based on ingredients you have at home.
+              Schedule breakfast, lunch, dinner, and snacks for the week below, or discover tailored suggestions based on ingredients you have at home.
             </p>
           </div>
           <Link href="/" className="btn btn-primary btn-sm">
@@ -131,7 +162,7 @@ export default function WeeklyPlannerPage() {
         </div>
       )}
 
-      {/* 7 Day Slot Cards */}
+      {/* 7 Day Slot Cards with 4 Meal Slots each */}
       <div className="planner-slots-grid" role="feed" aria-label="7-day weekly meal slots">
         {days.map((day) => (
           <DaySlotCard
@@ -139,19 +170,20 @@ export default function WeeklyPlannerPage() {
             day={day}
             onAddMeal={handleOpenPicker}
             onReplaceMeal={handleOpenPicker}
-            onRemoveMeal={removeMealFromDay}
+            onRemoveMeal={removeMealFromSlot}
           />
         ))}
       </div>
 
       {/* Meal Picker Modal */}
-      {pickerTargetDayIndex !== null && (
+      {pickerTarget !== null && (
         <MealPickerModal
-          isOpen={pickerTargetDayIndex !== null}
-          dayIndex={pickerTargetDayIndex}
+          isOpen={pickerTarget !== null}
+          dayIndex={pickerTarget.dayIndex}
+          slot={pickerTarget.slot}
           dayLabel={activePickerDayLabel}
           onSelectMeal={handleSelectMealFromPicker}
-          onClose={() => setPickerTargetDayIndex(null)}
+          onClose={() => setPickerTarget(null)}
         />
       )}
 
@@ -160,6 +192,7 @@ export default function WeeklyPlannerPage() {
         <ReplaceConfirmDialog
           isOpen={Boolean(replaceTarget)}
           dayLabel={replaceTarget.dayLabel}
+          slotName={replaceTarget.slotLabel}
           existingMealId={replaceTarget.existingMealId}
           newMeal={replaceTarget.newMeal}
           onConfirm={handleConfirmReplace}
