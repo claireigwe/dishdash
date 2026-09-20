@@ -600,3 +600,120 @@ I will continue testing the updated flow and observe whether starting with the u
 The next changes should continue to come from what I learn from users rather than from adding features simply because they are technically possible.
 
 ---
+
+# Week 5 — Improving Recommendations, Meal Coverage, and Weekly Planning
+
+## What I Worked On
+
+After testing the updated preference-first discovery flow, I continued improving DishDash based on the product direction that came out of the earlier research.
+
+This iteration focused on three areas:
+
+- Making recommendations more useful
+- Expanding the meal library
+- Making the weekly planner support more realistic eating patterns
+
+## Improving the Recommendation Engine
+
+The first recommendation engine relied heavily on ingredient-match counts. While this made the logic simple and predictable, it was not enough to consistently produce recommendations that felt like good matches.
+
+I decided to move to a multi-factor scoring approach rather than adding randomness or introducing AI.
+
+The new scoring model considers:
+
+- Preference fit: 35%
+- Ingredient coverage: 30%
+- Missing ingredients: 15%
+- Time and effort: 10%
+- Weekly variety: 10%
+
+Ingredient coverage is calculated proportionally so that a meal that matches most of its ingredients can rank appropriately rather than simply rewarding meals with more total ingredients.
+
+The recommendation system also considers what the user has already planned during the week. This helps reduce unnecessary repetition.
+
+### Recommendation Output
+
+I increased the recommendation limit from three to up to five meals.
+
+The first three recommendations can have distinct roles:
+
+- Best Match
+- Easiest Option
+- Wildcard
+
+The fourth and fifth recommendations are additional relevant options rather than filler. If there are not enough suitable meals, the system can return fewer than five.
+
+### Why I Made This Change
+
+The goal was to make the recommendation system feel more useful without making it a black box.
+
+I wanted the system to consider more of the actual decision instead of treating ingredient count as the main signal. Keeping the system deterministic also means the results remain predictable and testable.
+
+## Expanding the Meal Library
+
+I also expanded the meal library.
+
+One observation that influenced this decision was that the foods people describe as everyday Nigerian meals are not limited to traditional dishes. People also commonly eat simple combinations, improvised meals, and modern or globally influenced foods.
+
+Examples include things such as cabbage stew, spaghetti with egg sauce, noodles, shawarma, wraps, loaded fries, pasta dishes, and simple bread-and-egg combinations.
+
+### What I Chose
+
+I kept the existing meals and expanded the collection with more everyday meals that reflect the broader range of what people might actually consider when deciding what to eat.
+
+The library now contains 95 meals.
+
+The intention is not to turn DishDash into a traditional Nigerian recipe app. The product is focused on helping someone answer:
+
+> "What can I eat today?"
+
+A broader meal library makes that question more realistic for the people DishDash is trying to serve.
+
+## Expanding the Weekly Planner
+
+The original planner supported one meal per day.
+
+I decided to change this because a weekly plan does not necessarily mean one eating occasion per day. A person may want to plan breakfast, lunch, dinner, and a snack.
+
+The planner now has four named slots for each day:
+
+- Breakfast
+- Lunch
+- Dinner
+- Snack
+
+This creates up to 28 possible meal slots across a seven-day week.
+
+### Important Implementation Decision
+
+The slots are independent.
+
+Adding or replacing a breakfast meal should not overwrite lunch, dinner, or snack for the same day. Removing one slot should also leave the other planned meals unchanged.
+
+Existing single-meal plans are migrated into an appropriate slot rather than being discarded.
+
+## Updating the Grocery Flow
+
+The grocery generator was updated to consider all meals across all four daily slots.
+
+The grocery list still derives its ingredients from the weekly plan, removes ingredients the user already has, and deduplicates shared ingredients.
+
+This means the grocery list remains connected to the complete weekly plan rather than only considering one meal per day.
+
+## What I Learned
+
+The main lesson from this iteration was that improving a product does not always mean adding a completely new feature.
+
+The recommendation engine needed better reasoning, the meal library needed to better represent the user's reality, and the planner needed to reflect how people actually structure a week of eating.
+
+These changes all strengthen the same core experience:
+
+**Help a user decide what to cook, plan it for the week, and know what they need to buy.**
+
+## Validation
+
+After the recommendation, meal-library, and planner changes, I updated the relevant validation and test coverage to reflect the new product behavior.
+
+The recommendation tests now account for the multi-factor scoring approach and the expanded recommendation output. Planner and grocery behavior also account for multiple meal slots per day.
+
+The existing TypeScript and production build checks remain part of the validation process.

@@ -12,7 +12,7 @@ Users can:
 
 - Choose what they are in the mood for
 - Select ingredients they already have
-- Get up to three meal recommendations
+- Get up to five meal recommendations
 - See which ingredients they have and which they still need
 - View full meal instructions
 - Add meals to a seven-day weekly plan
@@ -21,7 +21,7 @@ Users can:
 - Check off grocery items as they shop
 - Continue using the core app when offline
 
-The app uses a curated collection of 20 Nigerian meals and 41 ingredients.
+The app uses a curated collection of 95 meals and an expanded ingredient library.
 
 ## Who is it for?
 
@@ -68,6 +68,8 @@ Selected ingredients can be removed individually or cleared at once.
 
 DishDash now starts the discovery flow by asking what the user is in the mood for.
 
+The recommendation engine returns up to five relevant meals using a deterministic multi-factor scoring system. Recommendations consider preference fit, ingredient coverage, missing ingredients, time and effort, and weekly variety.
+
 The available preferences are:
 
 - **Something Spicy**
@@ -102,7 +104,7 @@ When ingredients have been selected during discovery, the meal page separates th
 
 ### Weekly Planner
 
-Users can plan one meal for each of seven days.
+Users can plan breakfast, lunch, dinner, and a snack for each of seven days.
 
 The planner supports:
 
@@ -209,9 +211,9 @@ These features could be considered in a future version, but they were not necess
 
 The recommendation engine does not randomly select meals.
 
-Ingredient matches determine the ranking, while equal matches preserve the original dataset order.
+Recommendations use deterministic multi-factor scoring based on preference fit, ingredient coverage, missing ingredients, time and effort, and weekly variety. The system can return up to five recommendations without using random filler.
 
-This makes the recommendations predictable and easier to test.
+This makes the recommendations predictable, explainable, and easier to test.
 
 ### Start with user intent
 
@@ -259,6 +261,59 @@ The interface was designed around a narrow, mobile-oriented experience.
 On larger screens, the application remains intentionally narrow instead of expanding to fill the entire browser window. The goal is for the user to feel like they are using a mobile product even when they are on a laptop.
 
 The visual treatment uses a simple border around the application rather than a realistic phone mockup.
+
+## Recent Product Iterations
+
+### Expanding the Meal Library
+
+The meal library was expanded to better reflect the range of foods people actually eat in everyday Nigerian life.
+
+The expanded collection keeps the existing meals and adds practical everyday combinations, home improvisations, and modern or globally influenced foods. Examples include cabbage-based meals, noodles, egg and bread combinations, shawarma, wraps, loaded fries, pasta dishes, and other familiar options.
+
+The goal is not to position DishDash as a traditional Nigerian recipe app. The goal is to make the meal library useful for the real question the product is trying to answer:
+
+> "What can I eat today?"
+
+The library now contains 95 meals.
+
+### Recommendation Engine V2
+
+The recommendation system was improved after the initial ingredient-match approach proved too limited.
+
+The new deterministic scoring model considers five factors:
+
+- Preference fit: 35%
+- Ingredient coverage: 30%
+- Missing ingredients: 15%
+- Time and effort: 10%
+- Weekly variety: 10%
+
+Ingredient coverage is proportional rather than based only on the raw number of matching ingredients. Weekly variety also considers meals already planned so recommendations can avoid unnecessary repetition.
+
+The system returns up to five recommendations. The first three can be presented as:
+
+- Best Match
+- Easiest Option
+- Wildcard
+
+The remaining recommendations are additional relevant options rather than filler. Fewer than five results can be returned when there are not enough suitable meals.
+
+### Multi-Meal Weekly Planning
+
+The weekly planner was expanded from one meal per day to four named daily slots:
+
+- Breakfast
+- Lunch
+- Dinner
+- Snack
+
+This supports up to 28 planned meal slots across seven days.
+
+Adding, replacing, or removing a meal is now specific to the selected day and slot, so changing one slot does not overwrite another. Existing single-meal plans are migrated into an appropriate slot rather than being discarded.
+
+The grocery generator and recommendation variety logic also account for meals across all four slots.
+
+---
 
 ## Challenges and Solutions
 
@@ -347,15 +402,13 @@ The following were intentionally excluded from DishDash V1:
 - Ratings and reviews
 - User-submitted recipes
 - Calendar synchronization
-- Multiple meals per day
 
 ## Future Improvements
 
 If DishDash were developed further, possible improvements would include:
 
-- A larger meal and ingredient library
 - Ingredient quantities
-- More flexible meal scheduling
+- More flexible meal scheduling beyond the current four daily slots
 - Accounts and cloud synchronization
 - More advanced grocery planning
 - Optional nutrition information
@@ -445,7 +498,9 @@ DishDash V1 is a functional client-side meal decision and weekly planning applic
 
 The current experience is:
 
-**Choose Preference → Select Ingredients → Recommend → View Meal → Plan → Shop**
+**Choose Preference → Select Ingredients → Get Recommendations → View Meal → Plan → Shop**
+
+The planner supports Breakfast, Lunch, Dinner, and Snack across seven days, and the recommendation engine can return up to five scored recommendations.
 
 The project was built with a deliberately constrained scope and verified through automated testing, accessibility checks, responsive checks, persistence checks, and offline/PWA testing.
 
