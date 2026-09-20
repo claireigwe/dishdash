@@ -257,7 +257,7 @@ function runTests() {
   );
 
   // -------------------------------------------------------------
-  // Test 8: Five Distinct Roles Generated (Best Match, Easiest Option, Wildcard, Good Match, Another Option)
+  // Test 8: Three Distinct Roles Generated (Best Match, Easiest Option, Alternative)
   // -------------------------------------------------------------
   const test8 = getRecommendations({
     selectedIngredientIds: ["rice", "tomatoes", "onion", "vegetable_oil", "scotch_bonnet"],
@@ -267,34 +267,32 @@ function runTests() {
   const uniqueMealIds = new Set(test8.map((r) => r.meal.id));
 
   assert(
-    test8.length === 5 &&
-      uniqueMealIds.size === 5 &&
+    test8.length === 3 &&
+      uniqueMealIds.size === 3 &&
       test8[0].role === "best_match" &&
       test8[1].role === "easiest" &&
-      test8[2].role === "wildcard" &&
-      test8[3].role === "another_good_match" &&
-      test8[4].role === "another_option",
-    "8. Recommendations assign up to 5 distinct roles with 0 duplicates (best_match, easiest, wildcard, another_good_match, another_option)"
+      test8[2].role === "alternative",
+    "8. Recommendations assign up to 3 distinct roles with 0 duplicates (best_match, easiest, alternative)"
   );
 
   // -------------------------------------------------------------
-  // Test 9: Wildcard & Diversity Guarantee across Recommendations
-  // Wildcard is a genuine match satisfying intent while providing category/protein diversity
+  // Test 9: Alternative & Diversity Guarantee across Recommendations
+  // Alternative is a genuine match satisfying intent while providing category/protein diversity
   // -------------------------------------------------------------
   const bestMatchMeal = test8[0].meal;
   const easiestMeal = test8[1].meal;
-  const wildcardMeal = test8[2].meal;
+  const alternativeMeal = test8[2].meal;
 
   assert(
     test8[2].matchedIngredients.length > 0 &&
       test8[2].scoreBreakdown.preferenceScore >= 40 &&
-      (wildcardMeal.category !== bestMatchMeal.category ||
-        wildcardMeal.primaryProtein !== bestMatchMeal.primaryProtein),
-    "9. Wildcard is relevant (matched ingredients, good preference fit) while providing category/protein variety"
+      (alternativeMeal.category !== bestMatchMeal.category ||
+        alternativeMeal.primaryProtein !== bestMatchMeal.primaryProtein),
+    "9. Alternative is relevant (matched ingredients, good preference fit) while providing category/protein variety"
   );
 
   // -------------------------------------------------------------
-  // Test 10: Zero Selected Ingredients Handles Gracefully (returns up to 5)
+  // Test 10: Zero Selected Ingredients Handles Gracefully (returns up to 3)
   // -------------------------------------------------------------
   const test10 = getRecommendations({
     selectedIngredientIds: [],
@@ -304,12 +302,12 @@ function runTests() {
   const zeroSet = new Set(test10.map((r) => r.meal.id));
 
   assert(
-    test10.length === 5 &&
-      zeroSet.size === 5 &&
+    test10.length === 3 &&
+      zeroSet.size === 3 &&
       test10[0].matchedIngredients.length === 0 &&
       test10.every((r) => r.meal.cookingTime <= 30) &&
       test10[0].explanation.includes("Top match • Fits your quick mood"),
-    "10. Zero selected ingredients recommends 5 top preference-matched meals without claiming false matches"
+    "10. Zero selected ingredients recommends 3 top preference-matched meals without claiming false matches"
   );
 
   // -------------------------------------------------------------
@@ -387,7 +385,7 @@ function runTests() {
   );
 
   // -------------------------------------------------------------
-  // Test 16: Synthetic 4-candidate Library returns exactly 4 results
+  // Test 16: Synthetic 4-candidate Library caps output at 3 recommendations
   // -------------------------------------------------------------
   const test16 = getRecommendations({
     selectedIngredientIds: ["i1"],
@@ -400,12 +398,11 @@ function runTests() {
     ],
   });
   assert(
-    test16.length === 4 &&
+    test16.length === 3 &&
       test16[0].role === "best_match" &&
       test16[1].role === "easiest" &&
-      test16[2].role === "wildcard" &&
-      test16[3].role === "another_good_match",
-    "16. Insufficient candidates (4) returns exactly 4 recommendations with appropriate roles"
+      test16[2].role === "alternative",
+    "16. 4 candidates in library caps at maximum of 3 recommendations with appropriate roles"
   );
 
   console.log("-------------------------------------------------");

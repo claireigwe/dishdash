@@ -62,9 +62,7 @@ export type MealPreference =
 export type RecommendationRole =
   | "best_match"
   | "easiest"
-  | "wildcard"
-  | "another_good_match"
-  | "another_option";
+  | "alternative";
 
 export interface ScoreBreakdown {
   preferenceScore: number;

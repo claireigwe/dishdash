@@ -126,9 +126,9 @@ function runEndToEndAudit() {
   });
   assert(
     quickRecs.length > 0 &&
-      quickRecs.length <= 5 &&
+      quickRecs.length <= 3 &&
       quickRecs[0].matchedIngredients.length > 0,
-    "3. Quick & Easy recommendations return up to 5 matched meals prioritizing faster preparation"
+    "3. Quick & Easy recommendations return up to 3 matched meals prioritizing faster preparation"
   );
 
   // --- 4. Recommendations: 'surprise' Preference (All Meals) ---
@@ -139,15 +139,13 @@ function runEndToEndAudit() {
   });
   const allRecsUniqueIds = new Set(allRecs.map((r) => r.meal.id));
   assert(
-    allRecs.length === 5 &&
-      allRecsUniqueIds.size === 5 &&
+    allRecs.length === 3 &&
+      allRecsUniqueIds.size === 3 &&
       allRecs[0].role === "best_match" &&
       allRecs[1].role === "easiest" &&
-      allRecs[2].role === "wildcard" &&
-      allRecs[3].role === "another_good_match" &&
-      allRecs[4].role === "another_option" &&
+      allRecs[2].role === "alternative" &&
       allRecs.every((r) => r.matchedIngredients.length > 0),
-    "4. 'Surprise me' returns up to 5 distinct recommendation roles (Best Match, Easiest, Wildcard, Good Match, Another Option) matching available ingredients"
+    "4. 'Surprise me' returns up to 3 distinct recommendation roles (Best Match, Easiest, Alternative) matching available ingredients"
   );
 
   // --- 5. Meal Details: Ingredient Availability Partitioning ---

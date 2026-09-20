@@ -23,19 +23,9 @@ const ROLE_CONFIG: Record<
     badgeClass: "rank-badge rank-badge-easiest",
     icon: "⚡",
   },
-  wildcard: {
-    label: "Wildcard Choice",
-    badgeClass: "rank-badge rank-badge-wildcard",
-    icon: "✦",
-  },
-  another_good_match: {
-    label: "Good Match",
-    badgeClass: "rank-badge rank-badge-good",
-    icon: "✓",
-  },
-  another_option: {
-    label: "Another Option",
-    badgeClass: "rank-badge rank-badge-option",
+  alternative: {
+    label: "Alternative",
+    badgeClass: "rank-badge rank-badge-alternative",
     icon: "✦",
   },
 };
@@ -48,13 +38,14 @@ export function RecommendationCard({
   const { meal, matchedIngredients, missingIngredients, role, explanation } = recommendation;
   const hasMatched = matchedIngredients.length > 0;
 
-  const roleInfo = role
-    ? ROLE_CONFIG[role]
-    : {
-        label: `#${rankIndex + 1} Suggestion`,
-        badgeClass: "rank-badge",
-        icon: "#",
-      };
+  const roleInfo =
+    role && ROLE_CONFIG[role]
+      ? ROLE_CONFIG[role]
+      : {
+          label: `#${rankIndex + 1} Suggestion`,
+          badgeClass: "rank-badge",
+          icon: "#",
+        };
 
   // Explanation fallback if not provided directly
   const displayExplanation =

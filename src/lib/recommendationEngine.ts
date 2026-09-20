@@ -225,23 +225,12 @@ export function generateExplanation(
         missingCount === 1 ? "" : "s"
       } (${meal.cookingTime} mins)`;
     }
-    if (role === "wildcard") {
+    if (role === "alternative" || (role as string) === "wildcard") {
       const spiceText = meal.spiciness !== "none" ? `${meal.spiciness} spice` : "";
       const fillText = `${meal.fillingLevel} meal`;
       const tag = [spiceText, fillText].filter(Boolean).join(", ");
-      return `Wildcard choice • ${tag} using ${matchedCount} of your ingredients for variety`;
+      return `Alternative • ${tag} using ${matchedCount} of your ingredients for variety`;
     }
-    if (role === "another_good_match") {
-      if (missingCount === 0) {
-        return `Good match • You have all ${totalIngredients} ingredients, ready in ${meal.cookingTime} mins`;
-      }
-      return `Good match • Uses ${matchedCount} of ${totalIngredients} ingredients (${meal.cookingTime} mins)`;
-    }
-    // another_option
-    if (missingCount === 0) {
-      return `Another option • You have everything needed (${meal.cookingTime} mins)`;
-    }
-    return `Another option • Uses ${matchedCount} of your ingredients (${meal.cookingTime} mins)`;
   }
 
   // Zero ingredients selected flow
@@ -251,13 +240,10 @@ export function generateExplanation(
   if (role === "easiest") {
     return `Easiest option • Quick ${meal.cookingTime}-min prep with simple steps`;
   }
-  if (role === "wildcard") {
-    return `Wildcard choice • A delicious ${meal.category.toLowerCase()} suggestion for variety`;
+  if (role === "alternative" || (role as string) === "wildcard") {
+    return `Alternative • A delicious ${meal.category.toLowerCase()} suggestion for variety`;
   }
-  if (role === "another_good_match") {
-    return `Good match • Great ${meal.category.toLowerCase()} choice for your ${preference} mood`;
-  }
-  return `Another option • A delicious ${meal.category.toLowerCase()} dish ready in ${meal.cookingTime} mins`;
+  return `Alternative • A delicious ${meal.category.toLowerCase()} dish ready in ${meal.cookingTime} mins`;
 }
 
 interface ScoredCandidate {
@@ -269,13 +255,11 @@ interface ScoredCandidate {
 }
 
 /**
- * Pure, deterministic Recommendation Engine V2 for DishDash.
- * Returns up to 5 distinct, ranked recommendations:
+ * Pure, deterministic Recommendation Engine for DishDash.
+ * Returns up to 3 distinct, ranked recommendations:
  * 1. Best Match
  * 2. Easiest Option
- * 3. Wildcard Choice
- * 4. Another Good Match
- * 5. Another Option
+ * 3. Alternative
  */
 export function getRecommendations(input: RecommendationInput): MealRecommendation[] {
   const {
@@ -421,17 +405,20 @@ export function getRecommendations(input: RecommendationInput): MealRecommendati
     if (b.easeMetric !== a.easeMetric) {
       return b.easeMetric - a.easeMetric;
     }
-    return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
+    if (b.candidate.scoreBreakdown.totalScore !== a.candidate.scoreBreakdown.totalScore) {
+      return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
+    }
+    return a.candidate.originalIndex - b.candidate.originalIndex;
   });
 
   const easiestCandidate = scoredForEasiest[0].candidate;
 
-  // Role 3: Wildcard (relevant candidate providing variety from best and easiest)
+  // Role 3: Alternative (relevant candidate providing variety from best and easiest)
   const remainingAfterEasiest = candidates.filter(
     (c) => c.meal.id !== bestCandidate.meal.id && c.meal.id !== easiestCandidate.meal.id
   );
 
-  const scoredForWildcard = remainingAfterEasiest.map((c) => {
+  const scoredForAlternative = remainingAfterEasiest.map((c) => {
     const diffCategory =
       c.meal.category !== bestCandidate.meal.category &&
       c.meal.category !== easiestCandidate.meal.category;
@@ -440,96 +427,30 @@ export function getRecommendations(input: RecommendationInput): MealRecommendati
       c.meal.primaryProtein !== bestCandidate.meal.primaryProtein &&
       c.meal.primaryProtein !== easiestCandidate.meal.primaryProtein;
 
-    // Wildcard boost encourages category and protein divergence while keeping totalScore high
+    // Alternative boost encourages category and protein divergence while keeping totalScore high
     const diversityBoost = (diffCategory ? 20 : 0) + (diffProtein ? 20 : 0);
-    const wildcardMetric = c.scoreBreakdown.totalScore + diversityBoost;
+    const alternativeMetric = c.scoreBreakdown.totalScore + diversityBoost;
 
-    return { candidate: c, wildcardMetric };
+    return { candidate: c, alternativeMetric };
   });
 
-  scoredForWildcard.sort((a, b) => {
-    if (b.wildcardMetric !== a.wildcardMetric) {
-      return b.wildcardMetric - a.wildcardMetric;
+  scoredForAlternative.sort((a, b) => {
+    if (b.alternativeMetric !== a.alternativeMetric) {
+      return b.alternativeMetric - a.alternativeMetric;
     }
-    return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
+    if (b.candidate.scoreBreakdown.totalScore !== a.candidate.scoreBreakdown.totalScore) {
+      return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
+    }
+    return a.candidate.originalIndex - b.candidate.originalIndex;
   });
 
-  const wildcardCandidate = scoredForWildcard[0].candidate;
+  const alternativeCandidate = scoredForAlternative[0].candidate;
 
   const chosenSoFar: { candidate: ScoredCandidate; role: RecommendationRole }[] = [
     { candidate: bestCandidate, role: "best_match" },
     { candidate: easiestCandidate, role: "easiest" },
-    { candidate: wildcardCandidate, role: "wildcard" },
+    { candidate: alternativeCandidate, role: "alternative" },
   ];
-
-  // Role 4: Another Good Match (if 4th candidate exists)
-  const remainingAfterWildcard = candidates.filter(
-    (c) => !chosenSoFar.some((chosen) => chosen.candidate.meal.id === c.meal.id)
-  );
-
-  if (remainingAfterWildcard.length > 0) {
-    const existingCategories = new Set(chosenSoFar.map((x) => x.candidate.meal.category));
-    const existingProteins = new Set(chosenSoFar.map((x) => x.candidate.meal.primaryProtein));
-
-    const scoredForMatch4 = remainingAfterWildcard.map((c) => {
-      const isFreshCategory = !existingCategories.has(c.meal.category);
-      const isFreshProtein =
-        c.meal.primaryProtein !== "none" && !existingProteins.has(c.meal.primaryProtein);
-
-      // Mild diversity boost prevents identical duplicates while preserving high totalScore
-      const diversityBoost = (isFreshCategory ? 12 : 0) + (isFreshProtein ? 8 : 0);
-      const score4 = c.scoreBreakdown.totalScore + diversityBoost;
-
-      return { candidate: c, score4 };
-    });
-
-    scoredForMatch4.sort((a, b) => {
-      if (b.score4 !== a.score4) {
-        return b.score4 - a.score4;
-      }
-      if (b.candidate.scoreBreakdown.totalScore !== a.candidate.scoreBreakdown.totalScore) {
-        return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
-      }
-      return a.candidate.originalIndex - b.candidate.originalIndex;
-    });
-
-    const match4Candidate = scoredForMatch4[0].candidate;
-    chosenSoFar.push({ candidate: match4Candidate, role: "another_good_match" });
-
-    // Role 5: Another Option (if 5th candidate exists)
-    const remainingAfterMatch4 = candidates.filter(
-      (c) => !chosenSoFar.some((chosen) => chosen.candidate.meal.id === c.meal.id)
-    );
-
-    if (remainingAfterMatch4.length > 0) {
-      const updatedCategories = new Set(chosenSoFar.map((x) => x.candidate.meal.category));
-      const updatedProteins = new Set(chosenSoFar.map((x) => x.candidate.meal.primaryProtein));
-
-      const scoredForOption5 = remainingAfterMatch4.map((c) => {
-        const isFreshCategory = !updatedCategories.has(c.meal.category);
-        const isFreshProtein =
-          c.meal.primaryProtein !== "none" && !updatedProteins.has(c.meal.primaryProtein);
-
-        const diversityBoost = (isFreshCategory ? 12 : 0) + (isFreshProtein ? 8 : 0);
-        const score5 = c.scoreBreakdown.totalScore + diversityBoost;
-
-        return { candidate: c, score5 };
-      });
-
-      scoredForOption5.sort((a, b) => {
-        if (b.score5 !== a.score5) {
-          return b.score5 - a.score5;
-        }
-        if (b.candidate.scoreBreakdown.totalScore !== a.candidate.scoreBreakdown.totalScore) {
-          return b.candidate.scoreBreakdown.totalScore - a.candidate.scoreBreakdown.totalScore;
-        }
-        return a.candidate.originalIndex - b.candidate.originalIndex;
-      });
-
-      const option5Candidate = scoredForOption5[0].candidate;
-      chosenSoFar.push({ candidate: option5Candidate, role: "another_option" });
-    }
-  }
 
   return chosenSoFar.map(({ candidate, role }) => ({
     meal: candidate.meal,

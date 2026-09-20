@@ -717,3 +717,80 @@ After the recommendation, meal-library, and planner changes, I updated the relev
 The recommendation tests now account for the multi-factor scoring approach and the expanded recommendation output. Planner and grocery behavior also account for multiple meal slots per day.
 
 The existing TypeScript and production build checks remain part of the validation process.
+# Week 5 — Follow-up Customer Conversations
+
+## What I Worked On
+
+After the earlier research and the change to a preference-first discovery flow, I conducted five additional conversations with people in the target market.
+
+The goal was to understand what actually influences the meal decision in real situations, especially when someone knows they need to cook but is deciding what to make.
+
+I did not discuss DishDash during these conversations.
+
+## What I Learned
+
+The conversations reinforced that meal decisions are highly contextual.
+
+People considered factors such as:
+
+- What they are craving
+- Convenience
+- How quickly the meal can be prepared
+- How much energy they have
+- Health
+- Money available
+- Ingredient availability
+- Protein
+- Household or child preferences
+
+A few observations stood out:
+
+- Canice considered health after returning from the gym and tends to choose the easiest option when she has several choices.
+- Opeyemi said money available strongly influences her decision and that ingredient availability can affect whether she cooks what she has in mind.
+- Chika described convenience as the most important factor when deciding what to cook and also considers what she is craving.
+- Barakat described becoming fatigued when there are too many meal options and said she may prefer someone else to decide when she is tired.
+- Ayomide said cravings and finances strongly influence her decision and that having the ingredients already available makes the decision easier.
+
+## What Changed in My Thinking
+
+The conversations reinforced the decision to start DishDash with user intent rather than assuming that ingredients are always the starting point.
+
+They also raised a new question about the number of recommendations DishDash should provide.
+
+The current recommendation system can return up to five meals. However, one conversation suggested that having many possible choices can increase decision fatigue rather than reduce it.
+
+This is important because DishDash is intended to help someone make a decision, not simply give them a larger list of meals to consider.
+
+## What I Chose
+
+I chose to test a smaller recommendation set.
+
+Instead of returning up to five recommendations, DishDash will return up to three differentiated options:
+
+- **Best Match** — the meal with the strongest overall fit.
+- **Easiest Option** — an option that prioritises lower time and effort.
+- **Alternative** — another relevant option that gives the user a different direction.
+
+The existing multi-factor scoring model remains in place. This change is about how many recommendations are presented and how they are differentiated, not about replacing the recommendation logic with a new system.
+
+## What I Parked
+
+The conversations surfaced several factors that could potentially influence recommendations, but I am not turning each one into a new feature yet.
+
+I am continuing to park:
+
+- Budget tracking
+- Ingredient price tracking
+- Nutrition tracking
+- Protein-specific recommendations
+- Household or child preference profiles
+- Energy or fatigue tracking
+- AI recommendations
+
+These are useful research signals, but I do not yet have enough evidence to justify expanding the product around them.
+
+## Next Step
+
+I will implement and test the smaller recommendation set to see whether fewer, more differentiated options make the decision easier without reducing the usefulness of the recommendations.
+
+The next iteration should continue to focus on reducing the difficulty of deciding what to cook rather than adding more functionality.

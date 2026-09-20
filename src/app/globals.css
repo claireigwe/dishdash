@@ -1014,7 +1014,8 @@ button {
   border: 1px solid #C8E6C9;
 }
 
-.rank-badge-wildcard {
+.rank-badge-wildcard,
+.rank-badge-alternative {
   color: #B45309;
   background-color: #FEF3C7;
   border: 1px solid #FDE68A;
@@ -1692,6 +1693,7 @@ button {
   line-height: var(--line-height-snug);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: color var(--transition-fast);

@@ -12,7 +12,7 @@ Users can:
 
 - Choose what they are in the mood for
 - Select ingredients they already have
-- Get up to five meal recommendations
+- Get up to three differentiated meal recommendations
 - See which ingredients they have and which they still need
 - View full meal instructions
 - Add meals to a seven-day weekly plan
@@ -29,7 +29,7 @@ DishDash is designed for people who cook for themselves and often find themselve
 
 > "What should I cook today?"
 
-It is especially useful for solo cooks who have ingredients at home but need help deciding what to make.
+It is especially useful for solo cooks who need help deciding what to make, including when they already have ingredients available.
 
 ## The Problem
 
@@ -68,7 +68,7 @@ Selected ingredients can be removed individually or cleared at once.
 
 DishDash now starts the discovery flow by asking what the user is in the mood for.
 
-The recommendation engine returns up to five relevant meals using a deterministic multi-factor scoring system. Recommendations consider preference fit, ingredient coverage, missing ingredients, time and effort, and weekly variety.
+The recommendation engine returns up to three relevant meals using a deterministic multi-factor scoring system. Recommendations consider preference fit, ingredient coverage, missing ingredients, time and effort, and weekly variety.
 
 The available preferences are:
 
@@ -227,6 +227,18 @@ I therefore changed the discovery flow to ask about the user's preference first:
 
 This makes the user's intent the starting point while still using available ingredients as an important constraint.
 
+### Use a focused recommendation set
+
+The product is designed to reduce decision difficulty, so more recommendations are not automatically better. Follow-up conversations surfaced decision fatigue when users were presented with many possibilities.
+
+DishDash therefore limits the recommendation output to up to three differentiated options rather than five:
+
+- Best Match
+- Easiest Option
+- Alternative
+
+The underlying scoring model remains deterministic and multi-factor.
+
 ### Treat selected ingredients as a search state
 
 Selected ingredients are not treated as permanent pantry inventory.
@@ -290,13 +302,13 @@ The new deterministic scoring model considers five factors:
 
 Ingredient coverage is proportional rather than based only on the raw number of matching ingredients. Weekly variety also considers meals already planned so recommendations can avoid unnecessary repetition.
 
-The system returns up to five recommendations. The first three can be presented as:
+The system returns up to three recommendations. When enough suitable meals are available, they can be presented as:
 
 - Best Match
 - Easiest Option
-- Wildcard
+- Alternative
 
-The remaining recommendations are additional relevant options rather than filler. Fewer than five results can be returned when there are not enough suitable meals.
+Fewer than three results can be returned when there are not enough suitable meals.
 
 ### Multi-Meal Weekly Planning
 
@@ -500,7 +512,7 @@ The current experience is:
 
 **Choose Preference → Select Ingredients → Get Recommendations → View Meal → Plan → Shop**
 
-The planner supports Breakfast, Lunch, Dinner, and Snack across seven days, and the recommendation engine can return up to five scored recommendations.
+The planner supports Breakfast, Lunch, Dinner, and Snack across seven days, and the recommendation engine can return up to three scored recommendations.
 
 The project was built with a deliberately constrained scope and verified through automated testing, accessibility checks, responsive checks, persistence checks, and offline/PWA testing.
 
